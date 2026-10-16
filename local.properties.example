@@ -1,0 +1,8 @@
+# Copy to local.properties and point it at YOUR SDK. The real file is
+# machine-specific and git-ignored, so it never lands in a commit.
+#
+# Windows (Android Studio default):
+sdk.dir=C\:/Users/<you>/AppData/Local/Android/Sdk
+#
+# macOS: sdk.dir=/Users/<you>/Library/Android/sdk
+# Linux: sdk.dir=/home/<you>/Android/Sdk

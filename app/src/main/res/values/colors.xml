@@ -1,0 +1,8 @@
+<resources>
+    <!-- Only the two colours the system needs before Compose draws a frame:
+         the window background and the launcher icon ground. Every other colour
+         lives in ui/theme/Palette.kt, because the palette switches at runtime
+         and XML cannot follow that. -->
+    <color name="gymbro_ink">#FF0B0B0D</color>
+    <color name="gymbro_ember">#FFFF5A1F</color>
+</resources>

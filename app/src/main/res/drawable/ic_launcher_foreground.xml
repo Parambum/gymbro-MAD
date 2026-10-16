@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A barbell inside the 108dp launcher safe zone: two plates either side of a
+     bar. Vector, so it scales to every density with no asset pipeline. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:fillColor="#FFFF5A1F"
+        android:pathData="M36,51h36v6H36z" />
+    <path
+        android:fillColor="#FFFF5A1F"
+        android:pathData="M30,45h6v18h-6z M72,45h6v18h-6z" />
+    <path
+        android:fillColor="#FFFFB020"
+        android:pathData="M21,39h7v30h-7z M80,39h7v30h-7z" />
+</vector>

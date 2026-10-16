@@ -1,0 +1,11 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- A dark, edge-to-edge shell so the window does not flash white on cold
+         start, before the first Compose frame lands. -->
+    <style name="Theme.GymBro" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/gymbro_ink</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="27">shortEdges</item>
+    </style>
+</resources>
