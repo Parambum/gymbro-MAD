@@ -27,7 +27,28 @@
 
 
 #ZESHAWN
+## Part 1: Targets Onboarding & Mifflin-St Jeor (J-5)
+1. **Formula & Calculation:**
+   - Implement Mifflin-St Jeor BMR in a pure Kotlin file with zero Compose/Android imports.
+   - Calculate daily kcal target: BMR multiplied by selected activity factor.
+   - Set macro targets: protein ~2g per kg body weight; fat ~25% of kcal; carbs take the remainder.
+   - Add a pure JVM unit test verifying against at least two hand-calculated examples.
+2. **Onboarding & Configuration UI:**
+   - Prompt for height, weight, age, sex, and activity level.
+   - Allow user to skip immediately without setting targets.
+   - Ensure targets can be re-opened and updated later from the same flow.
+3. **UI & Design System Rules:**
+   - Use `LocalPalette.current` for colors (no hex literals).
+   - Use components from `ui/components/`.
+   - Support small screens (down to 360dp width) and scaled fonts.
+4. **Data & State Management:**
+   - Connect asynchronously without blocking the main thread.
+   - Zero Mock Data: Do not use sample rows or hardcoded numbers.
+   - Mark `done = true` for ticket J-5 in `project/Roadmap.kt`.
 
+### Constraints & Anti-Patterns:
+- Do not modify files outside `feature/fuel/`, `data/`, or `app/src/test/`.
+- Ensure no new compiler or linter warnings are generated.
 
 
 
