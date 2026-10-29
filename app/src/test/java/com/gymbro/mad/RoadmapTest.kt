@@ -16,8 +16,8 @@ import org.junit.Test
 class RoadmapTest {
 
     @Test
-    fun `the three of them own about sixty percent of the work`() {
-        val theirs = listOf(Owner.PREM, Owner.JOHN, Owner.ARNAV)
+    fun `John and Arnav own about sixty percent of the remaining work`() {
+        val theirs = listOf(Owner.JOHN, Owner.ARNAV)
             .sumOf { owner -> Roadmap.forOwner(owner).sumOf { it.hours } }
         val share = theirs.toFloat() / Roadmap.hoursTotal
 
@@ -25,11 +25,8 @@ class RoadmapTest {
     }
 
     @Test
-    fun `the three shares are within a few hours of each other`() {
-        val hours = listOf(Owner.PREM, Owner.JOHN, Owner.ARNAV)
-            .map { owner -> Roadmap.forOwner(owner).sumOf { it.hours } }
-
-        assertTrue("uneven split: $hours", hours.max() - hours.min() <= 3)
+    fun `Arnav owns the Train and Cardio tickets`() {
+        assertTrue(Roadmap.tickets.filter { it.id.startsWith("P-") }.all { it.owner == Owner.ARNAV })
     }
 
     @Test
@@ -39,10 +36,7 @@ class RoadmapTest {
         completedByOthers.forEach { id ->
             assertTrue("$id should be done", Roadmap.tickets.first { it.id == id }.done)
         }
-        val otherNonAditya = Roadmap.tickets.filter {
-            it.owner != Owner.ADITYA && it.id !in completedByOthers
-        }
-        assertTrue(otherNonAditya.none { it.done })
+        assertTrue(Roadmap.tickets.filter { it.id.startsWith("P-") }.all { it.done })
         assertEquals(Roadmap.hoursTotal - Roadmap.hoursDone, Roadmap.hoursLeft)
     }
 
@@ -66,6 +60,7 @@ class RoadmapTest {
             Routes.EXERCISE_PICKER,
             Routes.FOOD_SEARCH,
             Routes.SESSION_DETAIL,
+            Routes.WORKOUT_SUMMARY,
         )
         for (ticket in Roadmap.tickets) {
             val route = ticket.route ?: continue

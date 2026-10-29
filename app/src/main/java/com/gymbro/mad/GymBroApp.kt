@@ -27,6 +27,7 @@ import com.gymbro.mad.feature.profile.ProfileScreen
 import com.gymbro.mad.feature.stats.StatsScreen
 import com.gymbro.mad.feature.train.ExercisePickerScreen
 import com.gymbro.mad.feature.train.TrainScreen
+import com.gymbro.mad.feature.train.WorkoutSummaryScreen
 import com.gymbro.mad.project.Routes
 import com.gymbro.mad.ui.nav.GymBroBottomBar
 import com.gymbro.mad.ui.nav.GymBroTopBar
@@ -104,6 +105,7 @@ fun GymBroApp() {
                         onExerciseConsumed = {
                             entry.savedStateHandle["selectedExerciseId"] = null
                         },
+                        onOpenSummary = { id -> navController.open(Routes.workoutSummary(id)) },
                     )
                 }
                 composable(Routes.EXERCISE_PICKER) {
@@ -147,6 +149,12 @@ fun GymBroApp() {
                 composable(Routes.SESSION_DETAIL) { entry ->
                     SessionDetailScreen(
                         sessionId = entry.arguments?.getString("sessionId").orEmpty(),
+                    )
+                }
+                composable(Routes.WORKOUT_SUMMARY) { entry ->
+                    WorkoutSummaryScreen(
+                        sessionId = entry.arguments?.getString("sessionId").orEmpty(),
+                        onDone = { navController.switchTab(Tab.DECK) },
                     )
                 }
 

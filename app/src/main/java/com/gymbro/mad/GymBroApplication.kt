@@ -1,21 +1,29 @@
 package com.gymbro.mad
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
 import com.gymbro.mad.data.repo.Repos
 
 /**
  * Application class.
  *
- * Empty for now, and that is deliberate: the repositories live in the `Repos`
- * object and build themselves lazily, so there is nothing to initialise at
- * startup. It is declared in the manifest from the first commit because the
- * things that will need it - the Room database in A-5, a notification channel
- * for the rest timer in P-4 - are both easier to add to a class that already
- * exists than to introduce along with a manifest change.
+ * Initializes the persisted workout repository and the rest notification
+ * channel, which Android requires to exist before a notification is posted.
  */
 class GymBroApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         Repos.initialize(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getSystemService(NotificationManager::class.java).createNotificationChannel(
+                NotificationChannel(
+                    com.gymbro.mad.feature.train.REST_CHANNEL_ID,
+                    "Workout rest timer",
+                    NotificationManager.IMPORTANCE_DEFAULT,
+                ).apply { description = "Alerts when a set rest period is over" },
+            )
+        }
     }
 }

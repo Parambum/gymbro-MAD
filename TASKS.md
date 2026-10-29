@@ -11,9 +11,9 @@ this file if the scope changed. A unit test checks the two stay plausible.
 | --- | --- | --- | --- | --- |
 | Aditya | Base, 3D body map, Deck | B-1 … B-8 | 40 | 39% — **done** |
 | **John** | Fuel | J-1 … J-6 | **20** | 20% |
-| **Arnav** | Train, Cardio, History, Stats, platform | P-1 … P-7, A-1 … A-8 | **42** | 41% |
+| **Arnav** | Train, Cardio, History, Stats, platform | P-1 … P-7, A-1 … A-8 | **42** | 41% (P tickets done) |
 
-The three of you own **62 of 102 hours — 61% of the app**. Hours are a rough
+John and Arnav own **62 of 102 hours — 61% of the app**. Hours are a rough
 guide to keep the split even, not a deadline.
 
 ---
@@ -47,7 +47,7 @@ guide to keep the split even, not a deadline.
 
 ---
 
-# Arnav — Train and Cardio (21h)
+# Arnav — Train and Cardio (21h, complete)
 
 The logging engine. Everything else in the app displays what this produces, so
 you are first in the dependency chain: the sooner P-3 lands, the sooner Arnav's
@@ -58,12 +58,12 @@ Your files: `feature/train/`, `feature/cardio/`.
 ### P-1 — Exercise picker (3h)
 `feature/train/ExercisePickerScreen.kt`
 
-- [ ] Search field filtering as the user types, over all 191 movements.
-- [ ] A row of the 11 muscle-group chips; tapping one filters, tapping it again
+- [x] Search field filtering as the user types, over all 191 movements.
+- [x] A row of the 11 muscle-group chips; tapping one filters, tapping it again
       clears.
-- [ ] Each result shows the name and a dot in its group accent colour.
-- [ ] Tapping a result calls `onPicked(exerciseId)` and pops back.
-- [ ] A no-match state naming the search term.
+- [x] Each result shows the name and a dot in its group accent colour.
+- [x] Tapping a result calls `onPicked(exerciseId)` and pops back.
+- [x] A no-match state naming the search term.
 
 `ExerciseCatalog.search(query, groupSlug)` already does the filtering. Use
 `LazyColumn` — 191 rows in a `Column` inside a scroll container will drop
@@ -72,14 +72,14 @@ frames, and that is the most common Compose mistake there is.
 ### P-2 — Set logger rows (4h)
 `feature/train/` — a `SetRow` composable of your own
 
-- [ ] Weight, reps and optional RPE per row, each editable.
-- [ ] A tick that marks the set complete. Only completed sets count anywhere.
-- [ ] Numeric keyboard; decimals allowed for weight, integers only for reps.
-- [ ] Rejecting a bad entry rather than storing it — no negative weights, no
+- [x] Weight, reps and optional RPE per row, each editable.
+- [x] A tick that marks the set complete. Only completed sets count anywhere.
+- [x] Numeric keyboard; decimals allowed for weight, integers only for reps.
+- [x] Rejecting a bad entry rather than storing it — no negative weights, no
       30-rep typo swallowed silently.
-- [ ] Add-set copies the weight and reps of the previous set, which is what a
+- [x] Add-set copies the weight and reps of the previous set, which is what a
       lifter nearly always wants.
-- [ ] Delete a set, with the row sliding out rather than vanishing.
+- [x] Delete a set, with the row sliding out rather than vanishing.
 
 Keep the edit state local to the row and write through `putSet` on change.
 `putSet` replaces a set with the same id, so editing is the same call as adding.
@@ -87,13 +87,13 @@ Keep the edit state local to the row and write through `putSet` on change.
 ### P-3 — Active session (5h) — *the keystone ticket*
 `feature/train/TrainScreen.kt` and a `TrainViewModel`
 
-- [ ] No session: a Start button plus the last session as a card.
-- [ ] Running: title, elapsed time, running volume, the exercise list.
-- [ ] Add exercise opens P-1 and appends the result.
-- [ ] Finish calls `finishSession` and goes to the summary (P-5).
-- [ ] Discard asks first, then calls `discardSession`.
-- [ ] Rotating the phone or backgrounding the app does not lose the session.
-- [ ] Elapsed time keeps counting while the screen is open.
+- [x] No session: a Start button plus the last session as a card.
+- [x] Running: title, elapsed time, running volume, the exercise list.
+- [x] Add exercise opens P-1 and appends the result.
+- [x] Finish calls `finishSession` and goes to the summary (P-5).
+- [x] Discard asks first, then calls `discardSession`.
+- [x] Rotating the phone or backgrounding the app does not lose the session.
+- [x] Elapsed time keeps counting while the screen is open.
 
 `Repos.workouts.activeSession` is a `StateFlow<WorkoutSession?>` — collect it,
 do not keep a second copy in the ViewModel. `finishSession` already discards a
@@ -102,15 +102,15 @@ session with nothing completed in it; do not add your own check for that.
 ### P-4 — Rest timer (3h)
 `feature/train/`
 
-- [ ] Starts when a set is marked complete, with a default (90s) the user can
+- [x] Starts when a set is marked complete, with a default (90s) the user can
       change per exercise.
-- [ ] Counts down visibly on the Train screen; `MeterBar` is there for it.
-- [ ] Posts a notification when the rest is up if the app is backgrounded.
-- [ ] Declares `POST_NOTIFICATIONS` in the manifest **in this commit**, and
+- [x] Counts down visibly on the Train screen; `MeterBar` is there for it.
+- [x] Posts a notification when the rest is up if the app is backgrounded.
+- [x] Declares `POST_NOTIFICATIONS` in the manifest **in this commit**, and
       asks for it at the moment the first timer starts — not on app launch.
-- [ ] Still correct if the user leaves the app for five minutes: compute from a
+- [x] Still correct if the user leaves the app for five minutes: compute from a
       timestamp, never by counting ticks.
-- [ ] Refusing the permission leaves the on-screen timer working.
+- [x] Refusing the permission leaves the on-screen timer working.
 
 Create the notification channel in `GymBroApplication` — that is what it is
 there for.
@@ -118,21 +118,21 @@ there for.
 ### P-5 — Finish-session summary (2h)
 `feature/train/`
 
-- [ ] Volume, completed sets, duration, and volume per muscle group.
-- [ ] Any personal best set in this session, named.
-- [ ] A line about how it compares with the previous session of the same title,
+- [x] Volume, completed sets, duration, and volume per muscle group.
+- [x] Any personal best set in this session, named.
+- [x] A line about how it compares with the previous session of the same title,
       or nothing if there is no previous one — not "+0%".
-- [ ] Done returns to the Deck, which should already show the session.
+- [x] Done returns to the Deck, which should already show the session.
 
 ### P-6 — Cardio logging (3h)
 `feature/cardio/CardioScreen.kt`
 
-- [ ] A form: kind (`CardioKind`), duration, optional distance, optional
+- [x] A form: kind (`CardioKind`), duration, optional distance, optional
       average heart rate.
-- [ ] The list of past activities below, newest first, pace shown where there
+- [x] The list of past activities below, newest first, pace shown where there
       is a distance and a dash where there is not.
-- [ ] Long-press to delete via `CardioRepository.delete`.
-- [ ] Empty state for a fresh install.
+- [x] Long-press to delete via `CardioRepository.delete`.
+- [x] Empty state for a fresh install.
 
 No live GPS tracking. It needs a foreground service and background location
 permission, which is a project of its own — raise a new ticket if you want it.
@@ -140,11 +140,11 @@ permission, which is a project of its own — raise a new ticket if you want it.
 ### P-7 — Estimated 1RM (1h)
 `feature/train/`, plus a test
 
-- [ ] Shown per exercise in the session and in the summary.
-- [ ] Uses `PersonalBest.estimated1RmKg` (Epley) rather than a second formula.
-- [ ] Marked as an estimate, and suppressed above ~10 reps where Epley stops
+- [x] Shown per exercise in the session and in the summary.
+- [x] Uses `PersonalBest.estimated1RmKg` (Epley) rather than a second formula.
+- [x] Marked as an estimate, and suppressed above ~10 reps where Epley stops
       being honest.
-- [ ] A unit test with three known values.
+- [x] A unit test with three known values.
 
 ---
 

@@ -8,9 +8,8 @@ evening resolving a merge conflict instead of building a screen.
 | Owner | Folders |
 | --- | --- |
 | Aditya | `anatomy/`, `feature/deck/`, `feature/body/`, `ui/`, `data/` |
-| Prem | `feature/train/`, `feature/cardio/` |
+| Arnav | `feature/train/`, `feature/cardio/`, `feature/history/`, `feature/stats/`, `feature/profile/`, `data/db/`, `.github/` |
 | John | `feature/fuel/` |
-| Arnav | `feature/history/`, `feature/stats/`, `feature/profile/`, `data/db/`, `.github/` |
 
 Inside your own folders, build what you like. Outside them, there are four
 shared files, and all four are shared on purpose:

@@ -2,12 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
-    <!-- Nothing here needs a permission yet. Two tickets will: the Fuel
-         barcode scanner wants CAMERA, and the rest timer wants
-         POST_NOTIFICATIONS. Declare each one in the commit that actually uses
-         it, never ahead of time - an app that asks for the camera on install
-         and never opens it is the fastest way to lose a user. -->
+    <!-- Camera access is requested only when the user starts a barcode scan;
+         notification access is requested only when their first rest timer starts. -->
 
     <application
         android:name=".GymBroApplication"
@@ -31,6 +29,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver android:name=".feature.train.RestFinishedReceiver" android:exported="false" />
     </application>
 
 </manifest>

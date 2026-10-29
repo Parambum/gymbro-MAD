@@ -1,42 +1,112 @@
 package com.gymbro.mad.feature.cardio
 
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.gymbro.mad.project.Owner
-import com.gymbro.mad.project.Routes
-import com.gymbro.mad.ui.components.UnbuiltScreen
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gymbro.mad.data.model.CardioActivity
+import com.gymbro.mad.data.model.CardioKind
+import com.gymbro.mad.data.repo.CardioRepository
+import com.gymbro.mad.data.repo.Repos
+import com.gymbro.mad.ui.components.AccentButton
+import com.gymbro.mad.ui.components.EmptyState
+import com.gymbro.mad.ui.components.GymBroCard
+import com.gymbro.mad.ui.components.GymBroChip
+import com.gymbro.mad.ui.components.MicroLabel
+import com.gymbro.mad.ui.components.SectionHeader
+import com.gymbro.mad.ui.theme.LocalPalette
+import kotlinx.coroutines.launch
+import java.time.Duration
+import java.time.Instant
+import kotlin.math.roundToInt
 
-/**
- * PREM OWNS THIS FILE. Ticket P-6.
- *
- * Cardio is reached from the Deck rather than the tab bar - six tabs is the
- * most a phone takes, and lifting is what this app is for.
- */
 @Composable
-fun CardioScreen(modifier: Modifier = Modifier) {
-    UnbuiltScreen(
-        modifier = modifier,
-        title = "Cardio",
-        oneLiner = "Runs, rides and rows, logged after the fact rather than tracked live.",
-        owner = Owner.PREM,
-        route = Routes.CARDIO,
-        whatGoesHere = listOf(
-            "A log form: kind (the CardioKind enum), duration, optional distance, " +
-                "optional average heart rate.",
-            "The list of past activities under it, newest first, with pace where a " +
-                "distance was given.",
-            "Swipe or long-press to delete, going through CardioRepository.delete.",
-            "No live GPS tracking. It needs a foreground service and background " +
-                "location, which is a project of its own - if you want it, raise it " +
-                "as a new ticket rather than widening this one.",
-        ),
-        wiredForYou = listOf(
-            "Repos.cardio.activities is a StateFlow<List<CardioActivity>>, newest " +
-                "first, and log() keeps it sorted.",
-            "CardioActivity.paceMinPerKm is computed and returns null when there is " +
-                "no distance - show a dash, not a zero.",
-            "Durations are java.time.Duration, distances are metres. Convert for " +
-                "display only.",
-        ),
-    )
+@OptIn(ExperimentalFoundationApi::class)
+fun CardioScreen(modifier: Modifier = Modifier, cardio: CardioRepository = Repos.cardio) {
+    val palette = LocalPalette.current
+    val activities by cardio.activities.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    var kind by remember { mutableStateOf(CardioKind.RUN) }
+    var duration by remember { mutableStateOf("") }
+    var distance by remember { mutableStateOf("") }
+    var heartRate by remember { mutableStateOf("") }
+    var deleteId by remember { mutableStateOf<String?>(null) }
+    var error by remember { mutableStateOf<String?>(null) }
+    Column(modifier.fillMaxSize().padding(horizontal = 16.dp).padding(top = 12.dp, bottom = 16.dp)) {
+        Text("Cardio", style = MaterialTheme.typography.headlineSmall, color = palette.ink)
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            CardioKind.entries.forEach { option ->
+                GymBroChip(option.displayName, kind == option, { kind = option })
+            }
+        }
+        OutlinedTextField(duration, { duration = it.filter(Char::isDigit); error = null }, Modifier.fillMaxWidth(), label = { Text("Duration (minutes)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true)
+        OutlinedTextField(distance, { distance = it.filter { c -> c.isDigit() || c == '.' }; error = null }, Modifier.fillMaxWidth(), label = { Text("Distance in km (optional)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true)
+        OutlinedTextField(heartRate, { heartRate = it.filter(Char::isDigit); error = null }, Modifier.fillMaxWidth(), label = { Text("Average heart rate (optional)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true)
+        error?.let { Text(it, color = palette.danger) }
+        AccentButton("Log activity", onClick = {
+            val minutes = duration.toLongOrNull()
+            val km = distance.takeIf(String::isNotBlank)?.toDoubleOrNull()
+            val bpm = heartRate.takeIf(String::isNotBlank)?.toIntOrNull()
+            when {
+                minutes == null || minutes !in 1L..1440L -> error = "Enter a duration between 1 and 1440 minutes."
+                distance.isNotBlank() && (km == null || km <= 0 || km > 1000) -> error = "Enter a valid distance in kilometres."
+                heartRate.isNotBlank() && (bpm == null || bpm !in 30..250) -> error = "Enter a valid heart rate, or leave it blank."
+                else -> scope.launch {
+                    cardio.log(CardioActivity(kind = kind, startedAt = Instant.now(), duration = Duration.ofMinutes(minutes), distanceMeters = km?.times(1000), avgHeartRate = bpm))
+                    duration = ""; distance = ""; heartRate = ""
+                }
+            }
+        }, Modifier.fillMaxWidth())
+        Spacer(Modifier.height(10.dp))
+        SectionHeader("past activities")
+        if (activities.isEmpty()) {
+            EmptyState("No cardio logged", "Log a run, walk, ride, row or swim here. Activities are sorted newest first.")
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(activities, key = CardioActivity::id) { activity ->
+                    GymBroCard(modifier = Modifier.combinedClickable(onClick = {}, onLongClick = { deleteId = activity.id })) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(activity.kind.displayName, color = palette.ink, style = MaterialTheme.typography.titleMedium)
+                            MicroLabel(activity.startedAt.atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString())
+                        }
+                        Text("${activity.duration.toMinutes()} min · ${activity.distanceMeters?.let { "${(it / 1000).pretty()} km" } ?: "—"} · ${activity.avgHeartRate?.let { "$it bpm" } ?: "—"}", color = palette.muted)
+                        MicroLabel("pace ${activity.paceMinPerKm?.let { "${it.toInt()} min ${(it * 60).roundToInt() % 60} sec/km" } ?: "—"}")
+                    }
+                }
+            }
+        }
+    }
+    deleteId?.let { id ->
+        AlertDialog(onDismissRequest = { deleteId = null }, title = { Text("Delete activity?") }, text = { Text("This cardio entry will be removed from your log.") }, confirmButton = {
+            TextButton(onClick = { deleteId = null; scope.launch { cardio.delete(id) } }) { Text("Delete") }
+        }, dismissButton = { TextButton(onClick = { deleteId = null }) { Text("Cancel") } })
+    }
 }
+
+private fun Double.pretty() = if (this % 1.0 == 0.0) roundToInt().toString() else "%.1f".format(this)

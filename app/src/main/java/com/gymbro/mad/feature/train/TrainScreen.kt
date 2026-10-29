@@ -9,6 +9,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
@@ -39,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymbro.mad.data.catalog.ExerciseCatalog
 import com.gymbro.mad.data.model.SetEntry
 import com.gymbro.mad.data.model.WorkoutSession
+import com.gymbro.mad.data.model.PersonalBest
 import com.gymbro.mad.data.repo.Repos
 import com.gymbro.mad.data.repo.WorkoutRepository
 import com.gymbro.mad.ui.components.AccentButton
@@ -62,16 +75,23 @@ fun TrainScreen(
     onPickExercise: () -> Unit = {},
     selectedExerciseId: String? = null,
     onExerciseConsumed: () -> Unit = {},
+    onOpenSummary: (String) -> Unit = {},
 ) {
     val palette = LocalPalette.current
-    val active by workouts.activeSession.collectAsStateWithLifecycle()
+    val trainViewModel: TrainViewModel = viewModel(
+        factory = TrainViewModelFactory(workouts),
+    )
+    val active by trainViewModel.activeSession.collectAsStateWithLifecycle()
     val currentSession = active
-    val sessions by workouts.sessions.collectAsStateWithLifecycle()
+    val sessions by trainViewModel.sessions.collectAsStateWithLifecycle()
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     var title by rememberSaveable { mutableStateOf("Workout") }
     var showDiscardDialog by remember { mutableStateOf(false) }
     var elapsedNow by remember { mutableStateOf(Instant.now()) }
-    var savedMessage by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val requestNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    var restEndAt by rememberSaveable { mutableStateOf<Long?>(null) }
+    var restTotalSeconds by rememberSaveable { mutableStateOf(90) }
 
     LaunchedEffect(currentSession?.id) {
         while (currentSession != null) {
@@ -83,7 +103,7 @@ fun TrainScreen(
     LaunchedEffect(selectedExerciseId, currentSession?.id) {
         val exercise = selectedExerciseId?.let(ExerciseCatalog::exercise)
         if (exercise != null && currentSession != null) {
-            workouts.addExercise(currentSession.id, exercise)
+            trainViewModel.addExercise(currentSession.id, exercise)
         }
         if (selectedExerciseId != null) onExerciseConsumed()
     }
@@ -103,20 +123,6 @@ fun TrainScreen(
         )
 
         if (currentSession == null) {
-            if (savedMessage) {
-                GymBroCard(accent = palette.accent) {
-                    Text(
-                        "Session saved",
-                        color = palette.ink,
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        "Your completed workout is now in History and Stats.",
-                        color = palette.muted,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-            }
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
@@ -128,8 +134,7 @@ fun TrainScreen(
                 text = "Start workout",
                 icon = Icons.Filled.PlayArrow,
                 onClick = {
-                    savedMessage = false
-                    scope.launch { workouts.startSession(title.ifBlank { "Workout" }.trim()) }
+                    scope.launch { trainViewModel.start(title.ifBlank { "Workout" }.trim()) }
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -167,6 +172,15 @@ fun TrainScreen(
                     StatTile("sets", "${session.completedSets}", Modifier.weight(1f))
                 }
             }
+            if (restEndAt != null) {
+                val remaining = ((restEndAt!! - elapsedNow.toEpochMilli()) / 1000L).coerceAtLeast(0).toInt()
+                if (remaining > 0) {
+                    Text("Rest ${remaining / 60}:${(remaining % 60).toString().padStart(2, '0')}", color = palette.ink)
+                    com.gymbro.mad.ui.components.MeterBar(
+                        progress = 1f - remaining / restTotalSeconds.coerceAtLeast(1).toFloat(),
+                    )
+                }
+            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -181,8 +195,9 @@ fun TrainScreen(
                     text = "Finish",
                     onClick = {
                         scope.launch {
-                            workouts.finishSession(session.id)
-                            savedMessage = true
+                            val shouldOpenSummary = session.completedSets > 0
+                            trainViewModel.finish(session.id)
+                            if (shouldOpenSummary) onOpenSummary(session.id)
                         }
                     },
                 )
@@ -192,6 +207,23 @@ fun TrainScreen(
                     exercise = exercise,
                     session = session,
                     workouts = workouts,
+                    onSetCompleted = { name, seconds ->
+                        restTotalSeconds = seconds
+                        restEndAt = System.currentTimeMillis() + seconds * 1_000L
+                        val startNotification = {
+                            scheduleRestNotification(context, name.hashCode(), seconds, name)
+                        }
+                        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(
+                                context, Manifest.permission.POST_NOTIFICATIONS,
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            val preferences = context.getSharedPreferences("workout_rest", android.content.Context.MODE_PRIVATE)
+                            val firstRequest = !preferences.getBoolean("notification_requested", false)
+                            preferences.edit().putBoolean("notification_requested", true).apply()
+                            if (firstRequest) requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            startNotification()
+                        } else startNotification()
+                    },
                 )
             }
             if (session.exercises.isEmpty()) {
@@ -219,7 +251,7 @@ fun TrainScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showDiscardDialog = false
-                    scope.launch { workouts.discardSession(discardSessionId) }
+                    scope.launch { trainViewModel.discard(discardSessionId) }
                 }) {
                     Text("Discard")
                 }
@@ -238,10 +270,12 @@ private fun WorkoutExerciseCard(
     exercise: com.gymbro.mad.data.model.LoggedExercise,
     session: WorkoutSession,
     workouts: WorkoutRepository,
+    onSetCompleted: (String, Int) -> Unit,
 ) {
     val palette = LocalPalette.current
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val group = ExerciseCatalog.group(exercise.groupSlug)
+    var restSeconds by rememberSaveable(exercise.exerciseId) { mutableStateOf(90) }
     GymBroCard(accent = group?.accentArgb?.let { androidx.compose.ui.graphics.Color(it.toInt()) }) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -255,6 +289,16 @@ private fun WorkoutExerciseCard(
             }
         }
         Spacer(Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            MicroLabel("rest seconds")
+            OutlinedTextField(
+                value = restSeconds.toString(),
+                onValueChange = { it.toIntOrNull()?.takeIf { n -> n in 15..600 }?.let { restSeconds = it } },
+                modifier = Modifier.width(92.dp).height(54.dp),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            )
+        }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             MicroLabel("set", Modifier.weight(0.7f))
             MicroLabel("kg", Modifier.weight(1f))
@@ -262,17 +306,31 @@ private fun WorkoutExerciseCard(
             Spacer(Modifier.width(42.dp))
         }
         exercise.sets.forEachIndexed { index, set ->
-            SetLoggerRow(
-                set = set,
-                index = index + 1,
-                canComplete = set.weightKg >= 0.0 && set.reps in 1..30,
-                onChange = { updated ->
-                    scope.launch { workouts.putSet(session.id, exercise.exerciseId, updated) }
-                },
-                onDelete = {
-                    scope.launch { workouts.deleteSet(session.id, exercise.exerciseId, set.id) }
-                },
-            )
+            var visible by remember(set.id) { mutableStateOf(true) }
+            AnimatedVisibility(visible, exit = shrinkVertically(animationSpec = tween(180)) + fadeOut()) {
+                SetLoggerRow(
+                    set = set,
+                    index = index + 1,
+                    canComplete = set.weightKg >= 0.0 && set.reps in 1..30,
+                    onChange = { updated ->
+                        scope.launch { workouts.putSet(session.id, exercise.exerciseId, updated) }
+                        if (!set.completed && updated.completed) onSetCompleted(exercise.name, restSeconds)
+                    },
+                    onDelete = {
+                        visible = false
+                        scope.launch {
+                            kotlinx.coroutines.delay(180)
+                            workouts.deleteSet(session.id, exercise.exerciseId, set.id)
+                        }
+                    },
+                )
+            }
+        }
+        val best = exercise.sets.filter { it.completed && it.reps in 1..10 }.maxByOrNull {
+            PersonalBest(exercise.exerciseId, exercise.name, it.weightKg, it.reps, session.date).estimated1RmKg
+        }
+        if (best != null && best.reps > 0) {
+            MicroLabel("estimated 1RM · ${formatWeight(PersonalBest(exercise.exerciseId, exercise.name, best.weightKg, best.reps, session.date).estimated1RmKg)} kg", color = palette.muted)
         }
         GhostButton(
             text = "Add set",
@@ -306,16 +364,19 @@ private fun SetLoggerRow(
     val palette = LocalPalette.current
     var weightText by remember(set.id) { mutableStateOf(formatWeight(set.weightKg)) }
     var repsText by remember(set.id) { mutableStateOf(set.reps.toString()) }
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        MicroLabel("$index", Modifier.weight(0.7f))
+    var rpeText by remember(set.id) { mutableStateOf(set.rpe?.let(::formatWeight).orEmpty()) }
+    val weightValid = weightText.toDoubleOrNull()?.let { it.isFinite() && it in 0.0..1000.0 } == true
+    val repsValid = repsText.toIntOrNull()?.let { it in 1..30 } == true
+    val rpeValid = rpeText.isBlank() || rpeText.toDoubleOrNull()?.let { it in 1.0..10.0 } == true
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        MicroLabel("$index", Modifier.weight(0.35f))
         OutlinedTextField(
             value = weightText,
+            isError = !weightValid,
             onValueChange = { value ->
                 weightText = value
-                value.toDoubleOrNull()?.takeIf { it.isFinite() && it >= 0.0 }?.let {
+                value.toDoubleOrNull()?.takeIf { it.isFinite() && it in 0.0..1000.0 }?.let {
                     onChange(set.copy(weightKg = it))
                 }
             },
@@ -327,9 +388,10 @@ private fun SetLoggerRow(
         Spacer(Modifier.width(8.dp))
         OutlinedTextField(
             value = repsText,
+            isError = !repsValid,
             onValueChange = { value ->
                 repsText = value
-                value.toIntOrNull()?.takeIf { it in 0..30 }?.let {
+                value.toIntOrNull()?.takeIf { it in 1..30 }?.let {
                     onChange(set.copy(reps = it))
                 }
             },
@@ -340,7 +402,7 @@ private fun SetLoggerRow(
         )
         IconButton(
             onClick = { onChange(set.copy(completed = !set.completed)) },
-            enabled = canComplete,
+            enabled = set.completed || (canComplete && weightValid && repsValid && rpeValid),
         ) {
             Text(
                 text = if (set.completed) "✓" else "○",
@@ -351,6 +413,25 @@ private fun SetLoggerRow(
         IconButton(onClick = onDelete) {
             Icon(Icons.Filled.Delete, contentDescription = "Delete set", tint = palette.faint)
         }
+      }
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        Spacer(Modifier.width(32.dp))
+        OutlinedTextField(
+            value = rpeText,
+            isError = !rpeValid,
+            onValueChange = { value ->
+                rpeText = value
+                if (value.isBlank()) onChange(set.copy(rpe = null))
+                else value.toDoubleOrNull()?.takeIf { it in 1.0..10.0 }?.let { onChange(set.copy(rpe = it)) }
+            },
+            label = { Text("RPE") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.width(92.dp).height(54.dp),
+            textStyle = MaterialTheme.typography.bodySmall,
+        )
+        MicroLabel("optional RPE", Modifier.padding(start = 8.dp))
+      }
     }
 }
 

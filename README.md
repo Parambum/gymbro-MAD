@@ -10,7 +10,7 @@ Development course. It is a native rewrite, not a wrapper: the GymBro website
 are the design tokens and the exercise catalog, both ported deliberately.
 
 **This repo is a base.** Four of us are building on it. Roughly 40% is done —
-the parts everything else needs — and the remaining 60% is split between Prem,
+the parts everything else needs — and the remaining work is split between
 John and Arnav. See **[TASKS.md](TASKS.md)** for who owns what, and
 **[CONTRIBUTING.md](CONTRIBUTING.md)** before your first commit.
 
@@ -63,8 +63,8 @@ settings in `gradle.properties` are deliberately small for that reason.
 
 ## What is still in progress
 
-The cardio logging form, profile/settings, complete body-map analytics and
-Room persistence are still roadmap work. Workout sessions and their active
+Profile/settings, complete body-map analytics and Room persistence are still
+roadmap work. Workout sessions and their active
 draft are stored locally on-device; Fuel entries, targets and cardio activities
 are still in memory. The app does not sign in or sync with the website.
 
@@ -139,9 +139,8 @@ the file to read before changing it.
 ## Credits
 
 - **Aditya** — base, 3D body map, Deck
-- **Prem** — Train and Cardio
+- **Arnav** — Train, Cardio, History, Stats and platform
 - **John** — Fuel
-- **Arnav** — History, Stats and platform
 
 Design tokens and the exercise catalog are ported from the GymBro website,
 which is the same project at a different end.

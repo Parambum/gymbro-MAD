@@ -44,14 +44,14 @@ object Roadmap {
         Ticket("B-7", "3D anatomy: mesh builders, software renderer, Body screen", Owner.ADITYA, 12, done = true, route = Routes.BODY),
         Ticket("B-8", "Deck wired to the repositories", Owner.ADITYA, 4, done = true, route = Routes.DECK),
 
-        // ── Prem: the lifting engine ──────────────────────────────
-        Ticket("P-1", "Exercise picker: search and group filter over the catalog", Owner.PREM, 3, route = Routes.EXERCISE_PICKER),
-        Ticket("P-2", "Set logger rows: weight, reps, RPE, completed toggle", Owner.PREM, 4, route = Routes.TRAIN),
-        Ticket("P-3", "Active session: start, add, edit, finish, discard", Owner.PREM, 5, route = Routes.TRAIN),
-        Ticket("P-4", "Rest timer with a notification when the app is backgrounded", Owner.PREM, 3, route = Routes.TRAIN),
-        Ticket("P-5", "Finish-session summary: volume, sets, PRs hit, duration", Owner.PREM, 2, route = Routes.TRAIN),
-        Ticket("P-6", "Cardio logging: kind, duration, distance, average heart rate", Owner.PREM, 3, route = Routes.CARDIO),
-        Ticket("P-7", "Estimated 1RM per exercise, with unit tests", Owner.PREM, 1, route = Routes.TRAIN),
+        // ── Arnav: the lifting engine ────────────────────────────
+        Ticket("P-1", "Exercise picker: search and group filter over the catalog", Owner.ARNAV, 3, done = true, route = Routes.EXERCISE_PICKER),
+        Ticket("P-2", "Set logger rows: weight, reps, RPE, completed toggle", Owner.ARNAV, 4, done = true, route = Routes.TRAIN),
+        Ticket("P-3", "Active session: start, add, edit, finish, discard", Owner.ARNAV, 5, done = true, route = Routes.TRAIN),
+        Ticket("P-4", "Rest timer with a notification when the app is backgrounded", Owner.ARNAV, 3, done = true, route = Routes.TRAIN),
+        Ticket("P-5", "Finish-session summary: volume, sets, PRs hit, duration", Owner.ARNAV, 2, done = true, route = Routes.TRAIN),
+        Ticket("P-6", "Cardio logging: kind, duration, distance, average heart rate", Owner.ARNAV, 3, done = true, route = Routes.CARDIO),
+        Ticket("P-7", "Estimated 1RM per exercise, with unit tests", Owner.ARNAV, 1, done = true, route = Routes.TRAIN),
 
         // ── John: fuel ────────────────────────────────────────────
         Ticket("J-1", "Fuel day screen: macro rings, meal sections, day switcher", Owner.JOHN, 5, done = true, route = Routes.FUEL),
@@ -105,6 +105,8 @@ object Routes {
 
     const val PROFILE = "profile"
     const val EXERCISE_PICKER = "train/picker"
+    const val WORKOUT_SUMMARY = "train/summary/{sessionId}"
+    fun workoutSummary(sessionId: String) = "train/summary/$sessionId"
     const val FOOD_SEARCH = "fuel/search"
 
     /** History -> one session. Built by A-1. */

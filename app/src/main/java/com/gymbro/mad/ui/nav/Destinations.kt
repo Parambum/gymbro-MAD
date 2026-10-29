@@ -30,7 +30,7 @@ enum class Tab(
     val owner: Owner,
 ) {
     DECK(Routes.DECK, "Deck", Icons.Filled.SpaceDashboard, Owner.ADITYA),
-    TRAIN(Routes.TRAIN, "Train", Icons.Filled.FitnessCenter, Owner.PREM),
+    TRAIN(Routes.TRAIN, "Train", Icons.Filled.FitnessCenter, Owner.ARNAV),
     FUEL(Routes.FUEL, "Fuel", Icons.Filled.LocalFireDepartment, Owner.JOHN),
     BODY(Routes.BODY, "Body", Icons.Filled.AccessibilityNew, Owner.ADITYA),
     STATS(Routes.STATS, "Stats", Icons.Filled.BarChart, Owner.ARNAV),
@@ -52,6 +52,7 @@ val InnerRoutes = setOf(
     Routes.EXERCISE_PICKER,
     Routes.FOOD_SEARCH,
     Routes.SESSION_DETAIL,
+    Routes.WORKOUT_SUMMARY,
 )
 
 /** Title shown in the top bar for anything that is not a tab. */
@@ -61,5 +62,6 @@ fun innerRouteTitle(route: String?): String? = when (route) {
     Routes.EXERCISE_PICKER -> "Pick an exercise"
     Routes.FOOD_SEARCH -> "Find a food"
     Routes.SESSION_DETAIL -> "Session"
+    Routes.WORKOUT_SUMMARY -> "Workout summary"
     else -> null
 }
