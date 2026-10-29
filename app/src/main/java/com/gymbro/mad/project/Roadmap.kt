@@ -54,7 +54,7 @@ object Roadmap {
         Ticket("P-7", "Estimated 1RM per exercise, with unit tests", Owner.PREM, 1, route = Routes.TRAIN),
 
         // ── John: fuel ────────────────────────────────────────────
-        Ticket("J-1", "Fuel day screen: macro rings, meal sections, day switcher", Owner.JOHN, 5, route = Routes.FUEL),
+        Ticket("J-1", "Fuel day screen: macro rings, meal sections, day switcher", Owner.JOHN, 5, done = true, route = Routes.FUEL),
         Ticket("J-2", "Food search and FoodRepository against the web API", Owner.JOHN, 4, done = true, route = Routes.FOOD_SEARCH),
         Ticket("J-3", "Barcode scanner behind a camera permission request", Owner.JOHN, 4, route = Routes.FOOD_SEARCH),
         Ticket("J-4", "Add and edit an entry: portion size, unit conversion", Owner.JOHN, 3, route = Routes.FUEL),

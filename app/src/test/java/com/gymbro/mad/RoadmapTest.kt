@@ -37,7 +37,8 @@ class RoadmapTest {
         assertTrue(Roadmap.forOwner(Owner.ADITYA).all { it.done })
         assertTrue(Roadmap.tickets.first { it.id == "J-5" }.done)
         assertTrue(Roadmap.tickets.first { it.id == "J-2" }.done)
-        val otherNonAditya = Roadmap.tickets.filter { it.owner != Owner.ADITYA && it.id !in setOf("J-5", "J-2") }
+        assertTrue(Roadmap.tickets.first { it.id == "J-1" }.done)
+        val otherNonAditya = Roadmap.tickets.filter { it.owner != Owner.ADITYA && it.id !in setOf("J-5", "J-2", "J-1") }
         assertTrue(otherNonAditya.none { it.done })
         assertEquals(Roadmap.hoursTotal - Roadmap.hoursDone, Roadmap.hoursLeft)
     }
