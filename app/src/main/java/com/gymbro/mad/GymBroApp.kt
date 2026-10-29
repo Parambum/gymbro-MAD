@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -93,15 +94,26 @@ fun GymBroApp() {
                     )
                 }
 
-                composable(Routes.TRAIN) {
-                    TrainScreen(onPickExercise = { navController.open(Routes.EXERCISE_PICKER) })
+                composable(Routes.TRAIN) { entry ->
+                    val selectedExerciseId by entry.savedStateHandle
+                        .getStateFlow<String?>("selectedExerciseId", null)
+                        .collectAsStateWithLifecycle()
+                    TrainScreen(
+                        onPickExercise = { navController.open(Routes.EXERCISE_PICKER) },
+                        selectedExerciseId = selectedExerciseId,
+                        onExerciseConsumed = {
+                            entry.savedStateHandle["selectedExerciseId"] = null
+                        },
+                    )
                 }
                 composable(Routes.EXERCISE_PICKER) {
                     ExercisePickerScreen(
-                        // P-1 hands the chosen exercise back; until the session
-                        // state machine in P-3 exists there is nowhere to put it,
-                        // so for now picking just returns to Train.
-                        onPicked = { navController.popBackStack() },
+                        onPicked = { exerciseId ->
+                            navController.previousBackStackEntry
+                                ?.savedStateHandle
+                                ?.set("selectedExerciseId", exerciseId)
+                            navController.popBackStack()
+                        },
                     )
                 }
 

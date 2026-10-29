@@ -35,13 +35,13 @@ class RoadmapTest {
     @Test
     fun `the base and completed tickets are marked done`() {
         assertTrue(Roadmap.forOwner(Owner.ADITYA).all { it.done })
-        assertTrue(Roadmap.tickets.first { it.id == "J-5" }.done)
-        assertTrue(Roadmap.tickets.first { it.id == "J-2" }.done)
-        assertTrue(Roadmap.tickets.first { it.id == "J-1" }.done)
-        assertTrue(Roadmap.tickets.first { it.id == "J-4" }.done)
-        assertTrue(Roadmap.tickets.first { it.id == "J-6" }.done)
-        assertTrue(Roadmap.tickets.first { it.id == "J-3" }.done)
-        val otherNonAditya = Roadmap.tickets.filter { it.owner != Owner.ADITYA && it.id !in setOf("J-5", "J-2", "J-1", "J-4", "J-6", "J-3") }
+        val completedByOthers = setOf("J-1", "J-2", "J-3", "J-4", "J-5", "J-6", "A-1", "A-2", "A-3")
+        completedByOthers.forEach { id ->
+            assertTrue("$id should be done", Roadmap.tickets.first { it.id == id }.done)
+        }
+        val otherNonAditya = Roadmap.tickets.filter {
+            it.owner != Owner.ADITYA && it.id !in completedByOthers
+        }
         assertTrue(otherNonAditya.none { it.done })
         assertEquals(Roadmap.hoursTotal - Roadmap.hoursDone, Roadmap.hoursLeft)
     }

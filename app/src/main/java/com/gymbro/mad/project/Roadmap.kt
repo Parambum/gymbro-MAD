@@ -62,9 +62,9 @@ object Roadmap {
         Ticket("J-6", "Water and body-weight quick log", Owner.JOHN, 2, done = true, route = Routes.FUEL),
 
         // ── Arnav: history, stats, platform ───────────────────────
-        Ticket("A-1", "History grouped by week, plus the session detail route", Owner.ARNAV, 4, route = Routes.HISTORY),
-        Ticket("A-2", "Stats screen: volume per muscle group, PR table", Owner.ARNAV, 3, route = Routes.STATS),
-        Ticket("A-3", "Charts on Canvas: weekly volume bars, body-weight line", Owner.ARNAV, 4, route = Routes.STATS),
+        Ticket("A-1", "History grouped by week, plus the session detail route", Owner.ARNAV, 4, done = true, route = Routes.HISTORY),
+        Ticket("A-2", "Stats screen: volume per muscle group, PR table", Owner.ARNAV, 3, done = true, route = Routes.STATS),
+        Ticket("A-3", "Charts on Canvas: weekly volume bars, body-weight line", Owner.ARNAV, 4, done = true, route = Routes.STATS),
         // the tint itself is wired; what is missing is the reading of it
         Ticket("A-4", "Body heat map: window switch, volume legend, undertrained nudges", Owner.ARNAV, 2, route = Routes.BODY),
         Ticket("A-5", "Room persistence behind the existing repository interfaces", Owner.ARNAV, 4),

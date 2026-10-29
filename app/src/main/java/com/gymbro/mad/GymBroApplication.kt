@@ -1,6 +1,7 @@
 package com.gymbro.mad
 
 import android.app.Application
+import com.gymbro.mad.data.repo.Repos
 
 /**
  * Application class.
@@ -12,4 +13,9 @@ import android.app.Application
  * for the rest timer in P-4 - are both easier to add to a class that already
  * exists than to introduce along with a manifest change.
  */
-class GymBroApplication : Application()
+class GymBroApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        Repos.initialize(this)
+    }
+}

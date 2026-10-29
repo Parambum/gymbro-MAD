@@ -124,12 +124,15 @@ interface AnalyticsRepository {
 // them. What they do not do is survive the process being killed, which is why
 // ticket A-5 replaces them with Room behind the same interfaces.
 
-class InMemoryWorkoutRepository : WorkoutRepository {
+class InMemoryWorkoutRepository(
+    initialSessions: List<WorkoutSession> = emptyList(),
+    initialActiveSession: WorkoutSession? = null,
+) : WorkoutRepository {
 
-    private val _sessions = MutableStateFlow<List<WorkoutSession>>(emptyList())
+    private val _sessions = MutableStateFlow(initialSessions.sortedByDescending { it.startedAt })
     override val sessions: StateFlow<List<WorkoutSession>> = _sessions.asStateFlow()
 
-    private val _activeSession = MutableStateFlow<WorkoutSession?>(null)
+    private val _activeSession = MutableStateFlow(initialActiveSession)
     override val activeSession: StateFlow<WorkoutSession?> = _activeSession.asStateFlow()
 
     override suspend fun startSession(title: String): WorkoutSession {
@@ -296,6 +299,7 @@ class DerivedAnalyticsRepository(
             sessions
                 .filter { it.date >= cutoff }
                 .flatMap { it.exercises }
+                .filter { it.completedSets > 0 }
                 .groupBy { it.groupSlug }
                 .map { (slug, logged) ->
                     MuscleVolume(
@@ -362,9 +366,16 @@ class DerivedAnalyticsRepository(
  * own without touching the locator.
  */
 object Repos {
-    val workouts: WorkoutRepository = InMemoryWorkoutRepository()
+    var workouts: WorkoutRepository = InMemoryWorkoutRepository()
+        private set
     val cardio: CardioRepository = InMemoryCardioRepository()
     val fuel: FuelRepository = InMemoryFuelRepository()
     val food: FoodRepository = NetworkFoodRepository()
-    val analytics: AnalyticsRepository = DerivedAnalyticsRepository(workouts)
+    var analytics: AnalyticsRepository = DerivedAnalyticsRepository(workouts)
+        private set
+
+    fun initialize(context: android.content.Context) {
+        workouts = PersistentWorkoutRepository(context.applicationContext)
+        analytics = DerivedAnalyticsRepository(workouts)
+    }
 }

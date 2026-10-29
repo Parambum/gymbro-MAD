@@ -253,16 +253,16 @@ Your files: `feature/history/`, `feature/stats/`, `feature/profile/`,
 ### A-1 — History and session detail (4h)
 `feature/history/HistoryScreen.kt`, `SessionDetailScreen.kt`
 
-- [ ] Sessions grouped by week, newest first, with a week header carrying the
+- [x] Sessions grouped by week, newest first, with a week header carrying the
       date range, session count and total volume.
-- [ ] Each row: title, date, duration, volume, sets, and a dot per muscle group
+- [x] Each row: title, date, duration, volume, sets, and a dot per muscle group
       trained in its accent colour.
-- [ ] Tapping a row opens the detail route.
-- [ ] Detail: header stats, then each exercise with its sets; incomplete sets
+- [x] Tapping a row opens the detail route.
+- [x] Detail: header stats, then each exercise with its sets; incomplete sets
       shown as skipped rather than hidden.
-- [ ] Cardio activities in the same timeline, visibly different from lifts.
-- [ ] A not-found state for an id that no longer exists.
-- [ ] Empty state pointing at Train.
+- [x] Cardio activities in the same timeline, visibly different from lifts.
+- [x] A not-found state for an id that no longer exists.
+- [x] Empty state pointing at Train.
 
 Group with `TemporalAdjusters.previousOrSame(MONDAY)` — the same boundary
 `DerivedAnalyticsRepository` uses, so History and the charts agree on what a
@@ -271,21 +271,21 @@ week is.
 ### A-2 — Stats screen (3h)
 `feature/stats/StatsScreen.kt`
 
-- [ ] Volume per muscle group as a ranked bar list in group accent colours.
-- [ ] A personal-best table: exercise, best set, estimated 1RM, date.
-- [ ] A window selector (4 / 8 / 12 weeks) driving both.
-- [ ] Under about three sessions, say there is not enough logged to chart yet
+- [x] Volume per muscle group as a ranked bar list in group accent colours.
+- [x] A personal-best table: exercise, best set, estimated 1RM, date.
+- [x] A window selector (4 / 8 / 12 weeks) driving both.
+- [x] Under about three sessions, say there is not enough logged to chart yet
       and show the numbers instead.
 
 ### A-3 — Charts on Canvas (4h)
 `ui/components/Charts.kt` — new, shared
 
-- [ ] A bar chart: eight weeks of volume, including the empty weeks.
-- [ ] A line chart: body weight over time, from J-6's data.
-- [ ] Axis labels in the mono micro style, grid lines at ~12% ink.
-- [ ] Touch-and-hold shows the value for that bar or point.
-- [ ] Both animate in once, not on every recomposition.
-- [ ] Both read fine in all three themes — check Court, it is the awkward one.
+- [x] A bar chart: eight weeks of volume, including the empty weeks.
+- [x] A line chart: body weight over time, from J-6's data.
+- [x] Axis labels in the mono micro style, grid lines at ~12% ink.
+- [x] Touch-and-hold shows the value for that bar or point.
+- [x] Both animate in once, not on every recomposition.
+- [x] Both read fine in all three themes — check Court, it is the awkward one.
 
 No chart library. `drawLine`, `drawPath` and `drawRect` in a `Canvas`, in
 `ui/components/` because Fuel will want them too. `weeklyVolume` already pads

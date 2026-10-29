@@ -51,19 +51,23 @@ settings in `gradle.properties` are deliberately small for that reason.
 | **Theme** | Three palettes (Molten, Court, Classic) ported from the website, animated on switch. Type scale, shapes, 13 colour tokens. |
 | **Component kit** | `GymBroCard`, `StatTile`, `GymBroChip`, `AccentButton`, `GhostButton`, `EmptyState`, `MeterBar`, `SectionHeader`, `MicroLabel`. |
 | **Navigation** | Six tabs + five inner routes, one graph, back stack behaving like a tab bar should. |
-| **Data layer** | Models, five repository interfaces, working in-memory implementations, and analytics derived from logged sessions. |
+| **Data layer** | Models, repository interfaces, analytics derived from logged sessions, and local persistence for finished and active workouts. Cardio and Fuel repositories remain in memory. |
 | **Catalog** | 11 muscle groups × 191 movements, generated from the website's catalog so both agree on slugs. |
 | **3D body map** | A low-poly figure drawn by a software renderer written from scratch — no 3D engine, no model files. Drag, pinch, tap a muscle. |
+| **Train** | Start and discard sessions, find catalog movements, edit weight/reps, mark completed sets, and finish a workout. |
+| **History** | Strength and cardio activity timeline grouped by week, with all-time/date filters, workout summaries, and full strength-session details. |
+| **Stats** | 4/8/12-week summaries, completed-set volume by muscle, weekly volume and exercise load charts, personal bests, and a body-weight trend when at least two weigh-ins exist. |
 | **Deck** | The home screen, wired to the repositories, with honest empty states. |
-| **Tests** | 32 unit tests: mesh winding, camera and hit testing, repository rules, catalog integrity, and the task split itself. |
+| **Tests** | JVM tests cover geometry, repository rules, analytics, catalog integrity, and workout backup encoding. |
 
-## What is not
+## What is still in progress
 
-Train, Fuel, Cardio, Stats, History, Profile and the two search screens are
-**briefs, not placeholders**. Open any of those tabs in the app and it tells
-you who owns it, which tickets cover it, what the screen is meant to do, and
-which parts are already wired up. The same list drives the "build status" card
-on the Deck, so the app always knows how far along it is.
+The Fuel day log, cardio logging form, profile/settings, and complete body-map
+analytics are still roadmap work. Food search and calorie-target calculation
+are present, but Fuel entries/targets and cardio activities are not persisted.
+Workout sessions and their active draft are stored locally on-device; the app
+does not sign in or sync with the website. The website's private dashboard
+requires an account and could not be inspected as part of this implementation.
 
 ---
 
@@ -75,7 +79,7 @@ app/src/main/java/com/gymbro/mad/
 ├── GymBroApp.kt             theme + chrome + the whole nav graph
 ├── ui/
 │   ├── theme/               palettes, type, shapes
-│   ├── components/          the component kit, and UnbuiltScreen
+│   ├── components/          the component kit, charts, and UnbuiltScreen
 │   └── nav/                 tabs, top bar, bottom bar, wordmark
 ├── anatomy/                 the 3D figure
 │   ├── Geometry.kt          Vec3, Mesh, box/sphere/capsule/cylinder/icosphere
@@ -84,7 +88,7 @@ app/src/main/java/com/gymbro/mad/
 ├── data/
 │   ├── model/               every stored shape, free of Compose and Android
 │   ├── catalog/             GENERATED exercise catalog
-│   └── repo/                the interfaces every screen talks to
+│   └── repo/                interfaces, derived analytics, local workout store
 ├── project/Roadmap.kt       the task list, in code
 └── feature/<area>/          one folder per owner's screens
 ```
@@ -99,13 +103,14 @@ Screens never touch a database or each other. They read a repository interface
 from `data/repo/Repositories.kt` and render what it gives them:
 
 ```
-Screen ──collects──> Repository (interface) ──> InMemoryStore (today)
-                                            └─> Room (ticket A-5, same interface)
+Screen ──collects──> Repository (interface) ──> SharedPreferences workout store
+                                            └─> in-memory cardio and Fuel stores
 ```
 
 Analytics are **derived**, never stored — muscle volume, weekly volume and
-personal bests are all computed from logged sessions, so the charts and the
-body map cannot disagree with History.
+personal bests are computed from logged sessions, so the charts cannot drift
+from History. The workout store uses a versioned binary snapshot; the planned
+Room migration remains open for all repository types and relational queries.
 
 ## Two house rules
 
