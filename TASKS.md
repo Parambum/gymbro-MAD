@@ -10,10 +10,10 @@ this file if the scope changed. A unit test checks the two stay plausible.
 | Owner | Area | Tickets | Hours | Share |
 | --- | --- | --- | --- | --- |
 | Aditya | Base, 3D body map, Deck | B-1 … B-8 | 40 | 39% — **done** |
-| **John** | Fuel | J-1 … J-6 | **20** | 20% |
-| **Arnav** | Train, Cardio, History, Stats, platform | P-1 … P-7, A-1 … A-8 | **42** | 41% (P tickets done) |
+| **John** | Fuel | J-1 … J-6 | **20** | 19% |
+| **Arnav** | Train, Cardio, History, Stats, platform | P-1 … P-8, A-1 … A-8 | **46** | 43% (P tickets done) |
 
-John and Arnav own **62 of 102 hours — 61% of the app**. Hours are a rough
+John and Arnav own **66 of 106 hours — 62% of the app**. Hours are a rough
 guide to keep the split even, not a deadline.
 
 ---
@@ -134,8 +134,7 @@ there for.
 - [x] Long-press to delete via `CardioRepository.delete`.
 - [x] Empty state for a fresh install.
 
-No live GPS tracking. It needs a foreground service and background location
-permission, which is a project of its own — raise a new ticket if you want it.
+GPS route tracking is covered by P-8.
 
 ### P-7 — Estimated 1RM (1h)
 `feature/train/`, plus a test
@@ -145,6 +144,15 @@ permission, which is a project of its own — raise a new ticket if you want it.
 - [x] Marked as an estimate, and suppressed above ~10 reps where Epley stops
       being honest.
 - [x] A unit test with three known values.
+
+### P-8 — GPS cardio route tracking (4h)
+`feature/cardio/GpsTrackingService.kt`, `feature/cardio/CardioScreen.kt`
+
+- [x] Request location permission only when the user starts GPS tracking.
+- [x] Record a timestamped route and elapsed duration in a location foreground service.
+- [x] Continue recording while the app is backgrounded, with an ongoing notification.
+- [x] Calculate distance from route points and save the activity and route locally.
+- [x] Show the live route and the saved route in Cardio.
 
 ---
 

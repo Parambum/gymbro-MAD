@@ -51,10 +51,11 @@ settings in `gradle.properties` are deliberately small for that reason.
 | **Theme** | Three palettes (Molten, Court, Classic) ported from the website, animated on switch. Type scale, shapes, 13 colour tokens. |
 | **Component kit** | `GymBroCard`, `StatTile`, `GymBroChip`, `AccentButton`, `GhostButton`, `EmptyState`, `MeterBar`, `SectionHeader`, `MicroLabel`. |
 | **Navigation** | Six tabs + five inner routes, one graph, back stack behaving like a tab bar should. |
-| **Data layer** | Models, repository interfaces, analytics derived from logged sessions, and local persistence for finished and active workouts. Cardio and Fuel repositories remain in memory. |
+| **Data layer** | Models, repository interfaces, analytics derived from logged sessions, and local persistence for workouts and cardio activities, including GPS routes. Fuel remains in memory. |
 | **Catalog** | 11 muscle groups × 191 movements, generated from the website's catalog so both agree on slugs. |
 | **3D body map** | A low-poly figure drawn by a software renderer written from scratch — no 3D engine, no model files. Drag, pinch, tap a muscle. |
-| **Train** | Start and discard sessions, find catalog movements, edit weight/reps, mark completed sets, and finish a workout. |
+| **Train** | Start and discard sessions, find catalog movements, edit weight/reps, mark completed sets, rest timer, and finish-session summaries. |
+| **Cardio** | Log activities manually or record a GPS route in the background with an ongoing notification. |
 | **History** | Strength and cardio activity timeline grouped by week, with all-time/date filters, workout summaries, and full strength-session details. |
 | **Stats** | 4/8/12-week summaries, completed-set volume by muscle, weekly volume and exercise load charts, personal bests, and a body-weight trend when at least two weigh-ins exist. |
 | **Fuel** | Day screen with a day switcher, macro progress and meal sections; food search and a barcode scanner (CameraX + ML Kit); a portion sheet with live macro scaling; Mifflin-St Jeor targets onboarding; water and body-weight quick log. |
@@ -64,9 +65,9 @@ settings in `gradle.properties` are deliberately small for that reason.
 ## What is still in progress
 
 Profile/settings, complete body-map analytics and Room persistence are still
-roadmap work. Workout sessions and their active
-draft are stored locally on-device; Fuel entries, targets and cardio activities
-are still in memory. The app does not sign in or sync with the website.
+roadmap work. Workout sessions and their active draft, plus cardio activities
+and GPS routes, are stored locally on-device; Fuel entries and targets remain
+in memory. The app does not sign in or sync with the website.
 
 ---
 
@@ -102,8 +103,8 @@ Screens never touch a database or each other. They read a repository interface
 from `data/repo/Repositories.kt` and render what it gives them:
 
 ```
-Screen ──collects──> Repository (interface) ──> SharedPreferences workout store
-                                            └─> in-memory cardio and Fuel stores
+Screen ──collects──> Repository (interface) ──> SharedPreferences workout and cardio stores
+                                            └─> in-memory Fuel store
 ```
 
 Analytics are **derived**, never stored — muscle volume, weekly volume and

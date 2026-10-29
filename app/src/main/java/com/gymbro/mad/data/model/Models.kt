@@ -85,6 +85,7 @@ data class CardioActivity(
     val duration: Duration,
     val distanceMeters: Double? = null,
     val avgHeartRate: Int? = null,
+    val route: List<RoutePoint> = emptyList(),
 ) {
     /** minutes per kilometre, or null when no distance was recorded */
     val paceMinPerKm: Double?
@@ -92,6 +93,12 @@ data class CardioActivity(
             duration.seconds / 60.0 / (it / 1000.0)
         }
 }
+
+data class RoutePoint(
+    val latitude: Double,
+    val longitude: Double,
+    val recordedAt: Instant,
+)
 
 // ── fuel ──────────────────────────────────────────────────────────
 

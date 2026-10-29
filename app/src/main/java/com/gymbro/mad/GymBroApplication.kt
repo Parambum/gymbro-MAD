@@ -5,19 +5,28 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
 import com.gymbro.mad.data.repo.Repos
+import com.gymbro.mad.feature.cardio.GpsTrackingService
 
 /**
  * Application class.
  *
- * Initializes the persisted workout repository and the rest notification
- * channel, which Android requires to exist before a notification is posted.
+ * Initializes local repositories and notification channels before features
+ * post workout-rest or GPS-tracking notifications.
  */
 class GymBroApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         Repos.initialize(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            getSystemService(NotificationManager::class.java).createNotificationChannel(
+            val notifications = getSystemService(NotificationManager::class.java)
+            notifications.createNotificationChannel(
+                NotificationChannel(
+                    GpsTrackingService.CARDIO_TRACKING_CHANNEL_ID,
+                    "Cardio GPS tracking",
+                    NotificationManager.IMPORTANCE_LOW,
+                ).apply { description = "Ongoing GPS recording for your cardio activity" },
+            )
+            notifications.createNotificationChannel(
                 NotificationChannel(
                     com.gymbro.mad.feature.train.REST_CHANNEL_ID,
                     "Workout rest timer",

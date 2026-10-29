@@ -17,7 +17,7 @@ enum class Owner(val displayName: String, val initials: String, val area: String
     ADITYA("Aditya", "AP", "Base, 3D, Deck"),
     PREM("Prem", "PR", "Train and Cardio"),
     JOHN("John", "JO", "Fuel"),
-    ARNAV("Arnav", "AR", "History, Stats, platform"),
+    ARNAV("Arnav", "AR", "Train, Cardio, History, Stats, platform"),
 }
 
 data class Ticket(
@@ -52,6 +52,7 @@ object Roadmap {
         Ticket("P-5", "Finish-session summary: volume, sets, PRs hit, duration", Owner.ARNAV, 2, done = true, route = Routes.TRAIN),
         Ticket("P-6", "Cardio logging: kind, duration, distance, average heart rate", Owner.ARNAV, 3, done = true, route = Routes.CARDIO),
         Ticket("P-7", "Estimated 1RM per exercise, with unit tests", Owner.ARNAV, 1, done = true, route = Routes.TRAIN),
+        Ticket("P-8", "GPS cardio route tracking with background recording", Owner.ARNAV, 4, done = true, route = Routes.CARDIO),
 
         // ── John: fuel ────────────────────────────────────────────
         Ticket("J-1", "Fuel day screen: macro rings, meal sections, day switcher", Owner.JOHN, 5, done = true, route = Routes.FUEL),

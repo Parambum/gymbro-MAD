@@ -87,6 +87,7 @@ fun TrainScreen(
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     var title by rememberSaveable { mutableStateOf("Workout") }
     var showDiscardDialog by remember { mutableStateOf(false) }
+    var showIncompleteFinishDialog by remember { mutableStateOf(false) }
     var elapsedNow by remember { mutableStateOf(Instant.now()) }
     val context = LocalContext.current
     val requestNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -194,14 +195,21 @@ fun TrainScreen(
                 GhostButton(
                     text = "Finish",
                     onClick = {
-                        scope.launch {
-                            val shouldOpenSummary = session.completedSets > 0
+                        if (session.completedSets == 0) {
+                            showIncompleteFinishDialog = true
+                        } else {
+                            scope.launch {
                             trainViewModel.finish(session.id)
-                            if (shouldOpenSummary) onOpenSummary(session.id)
+                                onOpenSummary(session.id)
+                            }
                         }
                     },
                 )
             }
+            MicroLabel(
+                "Only sets marked ✓ are saved when you finish.",
+                color = palette.muted,
+            )
             session.exercises.forEach { exercise ->
                 WorkoutExerciseCard(
                     exercise = exercise,
@@ -243,6 +251,18 @@ fun TrainScreen(
     }
 
     val discardSessionId = currentSession?.id
+    if (showIncompleteFinishDialog) {
+        AlertDialog(
+            onDismissRequest = { showIncompleteFinishDialog = false },
+            title = { Text("No completed sets yet") },
+            text = { Text("Your workout is still here. Mark at least one set complete with the circle beside it, then tap Finish to save the session.") },
+            confirmButton = {
+                TextButton(onClick = { showIncompleteFinishDialog = false }) {
+                    Text("Back to workout")
+                }
+            },
+        )
+    }
     if (showDiscardDialog && discardSessionId != null) {
         AlertDialog(
             onDismissRequest = { showDiscardDialog = false },

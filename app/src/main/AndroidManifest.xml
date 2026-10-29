@@ -3,9 +3,14 @@
 <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
-    <!-- Camera access is requested only when the user starts a barcode scan;
-         notification access is requested only when their first rest timer starts. -->
+    <!-- Camera and location are requested when their features start. GPS
+         tracking begins from the visible Cardio screen, then its foreground
+         service continues location access while the app is backgrounded. -->
 
     <application
         android:name=".GymBroApplication"
@@ -30,6 +35,10 @@
             </intent-filter>
         </activity>
         <receiver android:name=".feature.train.RestFinishedReceiver" android:exported="false" />
+        <service
+            android:name=".feature.cardio.GpsTrackingService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
     </application>
 
 </manifest>

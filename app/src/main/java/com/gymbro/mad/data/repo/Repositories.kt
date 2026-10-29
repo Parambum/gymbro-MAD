@@ -120,9 +120,8 @@ interface AnalyticsRepository {
 
 // ══ in-memory implementations ═════════════════════════════════════
 //
-// These are real implementations, not fakes: the app works end to end with
-// them. What they do not do is survive the process being killed, which is why
-// ticket A-5 replaces them with Room behind the same interfaces.
+// The in-memory implementations are used by tests and previews. The app wires
+// persisted workout and cardio repositories; Fuel remains in memory until A-5.
 
 class InMemoryWorkoutRepository(
     initialSessions: List<WorkoutSession> = emptyList(),
@@ -368,7 +367,8 @@ class DerivedAnalyticsRepository(
 object Repos {
     var workouts: WorkoutRepository = InMemoryWorkoutRepository()
         private set
-    val cardio: CardioRepository = InMemoryCardioRepository()
+    var cardio: CardioRepository = InMemoryCardioRepository()
+        private set
     val fuel: FuelRepository = InMemoryFuelRepository()
     val food: FoodRepository = NetworkFoodRepository()
     var analytics: AnalyticsRepository = DerivedAnalyticsRepository(workouts)
@@ -376,6 +376,7 @@ object Repos {
 
     fun initialize(context: android.content.Context) {
         workouts = PersistentWorkoutRepository(context.applicationContext)
+        cardio = PersistentCardioRepository(context.applicationContext)
         analytics = DerivedAnalyticsRepository(workouts)
     }
 }
