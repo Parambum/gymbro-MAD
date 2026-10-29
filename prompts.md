@@ -50,7 +50,23 @@
 - Do not modify files outside `feature/fuel/`, `data/`, or `app/src/test/`.
 - Ensure no new compiler or linter warnings are generated.
 
-
+## J-2: Food Search and the Repository
+1. Repository & Network:
+   - Add Retrofit or Ktor dependencies cleanly in gradle/libs.versions.toml.
+   - Implement production FoodRepository pointing to /api/fuel/foods with base URL in a single constant.
+   - Swap the implementation into Repos.food.
+2. Search Screen:
+   - Implement ~300ms debounce on search input field.
+   - Display results with name, brand, and kcal per 100g using standard kit components.
+   - Implement explicit error states: a failed network lookup must state the error clearly and never appear as an empty cupboard.
+   - Display an honest no-results state specifying the searched term.
+3. UI & Design System Rules:
+   - Use LocalPalette.current for colors.
+   - Collect flow states via collectAsStateWithLifecycle().
+   - Support 360dp width and system font scaling.
+4. Constraints & Anti-Patterns:
+   - Confine changes to data/repo/, feature/fuel/FoodSearchScreen.kt, and gradle/libs.versions.toml.
+   - Mark done = true for ticket J-2 in project/Roadmap.kt.
 
 #ADI
 

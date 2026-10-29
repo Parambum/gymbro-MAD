@@ -365,6 +365,6 @@ object Repos {
     val workouts: WorkoutRepository = InMemoryWorkoutRepository()
     val cardio: CardioRepository = InMemoryCardioRepository()
     val fuel: FuelRepository = InMemoryFuelRepository()
-    val food: FoodRepository = EmptyFoodRepository()
+    val food: FoodRepository = NetworkFoodRepository()
     val analytics: AnalyticsRepository = DerivedAnalyticsRepository(workouts)
 }
