@@ -57,17 +57,16 @@ settings in `gradle.properties` are deliberately small for that reason.
 | **Train** | Start and discard sessions, find catalog movements, edit weight/reps, mark completed sets, and finish a workout. |
 | **History** | Strength and cardio activity timeline grouped by week, with all-time/date filters, workout summaries, and full strength-session details. |
 | **Stats** | 4/8/12-week summaries, completed-set volume by muscle, weekly volume and exercise load charts, personal bests, and a body-weight trend when at least two weigh-ins exist. |
+| **Fuel** | Day screen with a day switcher, macro progress and meal sections; food search and a barcode scanner (CameraX + ML Kit); a portion sheet with live macro scaling; Mifflin-St Jeor targets onboarding; water and body-weight quick log. |
 | **Deck** | The home screen, wired to the repositories, with honest empty states. |
-| **Tests** | JVM tests cover geometry, repository rules, analytics, catalog integrity, and workout backup encoding. |
+| **Tests** | JVM tests cover geometry, repository rules, analytics, catalog integrity, workout backup encoding, Fuel day and portion maths, the barcode scanner, and the water and weight log. |
 
 ## What is still in progress
 
-The Fuel day log, cardio logging form, profile/settings, and complete body-map
-analytics are still roadmap work. Food search and calorie-target calculation
-are present, but Fuel entries/targets and cardio activities are not persisted.
-Workout sessions and their active draft are stored locally on-device; the app
-does not sign in or sync with the website. The website's private dashboard
-requires an account and could not be inspected as part of this implementation.
+The cardio logging form, profile/settings, complete body-map analytics and
+Room persistence are still roadmap work. Workout sessions and their active
+draft are stored locally on-device; Fuel entries, targets and cardio activities
+are still in memory. The app does not sign in or sync with the website.
 
 ---
 
