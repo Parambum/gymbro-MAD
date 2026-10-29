@@ -10,11 +10,10 @@ this file if the scope changed. A unit test checks the two stay plausible.
 | Owner | Area | Tickets | Hours | Share |
 | --- | --- | --- | --- | --- |
 | Aditya | Base, 3D body map, Deck | B-1 … B-8 | 40 | 39% — **done** |
-| **Prem** | Train and Cardio | P-1 … P-7 | **21** | 21% |
 | **John** | Fuel | J-1 … J-6 | **20** | 20% |
-| **Arnav** | History, Stats, platform | A-1 … A-8 | **21** | 21% |
+| **Arnav** | Train, Cardio, History, Stats, platform | P-1 … P-7, A-1 … A-8 | **42** | 41% |
 
-The three of you own **61 of 102 hours — 60% of the app**. Hours are a rough
+The three of you own **62 of 102 hours — 61% of the app**. Hours are a rough
 guide to keep the split even, not a deadline.
 
 ---
@@ -48,11 +47,11 @@ guide to keep the split even, not a deadline.
 
 ---
 
-# Prem — Train and Cardio (21h)
+# Arnav — Train and Cardio (21h)
 
 The logging engine. Everything else in the app displays what this produces, so
 you are first in the dependency chain: the sooner P-3 lands, the sooner Arnav's
-charts and my body map have anything to show.
+charts and body map have anything to show.
 
 Your files: `feature/train/`, `feature/cardio/`.
 
