@@ -69,6 +69,13 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
 
+    // Ticket J-3: CameraX & ML Kit Barcode Scanning
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.google.mlkit.barcode.scanning)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
 
