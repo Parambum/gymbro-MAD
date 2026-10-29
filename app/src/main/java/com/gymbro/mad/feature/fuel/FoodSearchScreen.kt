@@ -61,6 +61,13 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.transformLatest
 import kotlin.math.roundToInt
 
+import androidx.compose.runtime.rememberCoroutineScope
+import com.gymbro.mad.data.model.Meal
+import com.gymbro.mad.data.model.MealEntry
+import com.gymbro.mad.data.repo.FuelRepository
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+
 /**
  * UI state for food search operations.
  */
@@ -75,22 +82,29 @@ sealed interface FoodSearchUiState {
 private data class SearchTrigger(val query: String, val retryCount: Int)
 
 /**
- * Food Search Screen (Ticket J-2).
+ * Food Search Screen (Ticket J-2 & J-4).
  *
  * Implements a 300ms debounce on the search field, connects to [FoodRepository],
  * and explicitly distinguishes honest no-results from network failures.
+ * Selecting a food opens the [PortionSheet] to specify grams/portion and log directly to [FuelRepository].
  */
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @Composable
 fun FoodSearchScreen(
     modifier: Modifier = Modifier,
     foodRepository: FoodRepository = Repos.food,
+    fuelRepository: FuelRepository = Repos.fuel,
+    targetMeal: Meal? = null,
+    targetDay: LocalDate = LocalDate.now(),
     onPicked: (foodId: String) -> Unit = {},
+    onLogged: (MealEntry) -> Unit = {},
 ) {
     val palette = LocalPalette.current
+    val coroutineScope = rememberCoroutineScope()
 
     var query by rememberSaveable { mutableStateOf("") }
     var retryCount by rememberSaveable { mutableIntStateOf(0) }
+    var selectedFoodForPortion by remember { mutableStateOf<FoodItem?>(null) }
 
     val uiState by remember(foodRepository) {
         snapshotFlow { SearchTrigger(query.trim(), retryCount) }
@@ -277,11 +291,30 @@ fun FoodSearchScreen(
                     items(state.items, key = { it.id }) { item ->
                         FoodResultCard(
                             item = item,
-                            onClick = { onPicked(item.id) },
+                            onClick = {
+                                selectedFoodForPortion = item
+                                onPicked(item.id)
+                            },
                         )
                     }
                 }
             }
+        }
+
+        selectedFoodForPortion?.let { food ->
+            PortionSheet(
+                foodItem = food,
+                initialMeal = targetMeal,
+                targetDay = targetDay,
+                onDismiss = { selectedFoodForPortion = null },
+                onSaveEntry = { entry ->
+                    coroutineScope.launch {
+                        fuelRepository.addEntry(entry)
+                        selectedFoodForPortion = null
+                        onLogged(entry)
+                    }
+                },
+            )
         }
     }
 }

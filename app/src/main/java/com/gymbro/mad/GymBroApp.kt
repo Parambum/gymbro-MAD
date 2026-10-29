@@ -107,7 +107,10 @@ fun GymBroApp() {
                     FuelScreen(onFindFood = { navController.open(Routes.FOOD_SEARCH) })
                 }
                 composable(Routes.FOOD_SEARCH) {
-                    FoodSearchScreen(onPicked = { navController.popBackStack() })
+                    FoodSearchScreen(
+                        onPicked = { /* opens portion sheet */ },
+                        onLogged = { navController.popBackStack() },
+                    )
                 }
 
                 composable(Routes.BODY) {

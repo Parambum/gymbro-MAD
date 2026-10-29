@@ -92,6 +92,35 @@ fun FuelScreen(
 
     var showOnboardingSheet by rememberSaveable { mutableStateOf(false) }
     var hasSkippedOnboarding by rememberSaveable { mutableStateOf(false) }
+    var entryBeingEdited by remember { mutableStateOf<MealEntry?>(null) }
+
+    entryBeingEdited?.let { entry ->
+        val per100g = if (entry.grams > 0) {
+            entry.macros.scaled(100.0 / entry.grams)
+        } else {
+            entry.macros
+        }
+        val foodItem = com.gymbro.mad.data.model.FoodItem(
+            id = entry.foodId,
+            name = entry.name,
+            per100g = per100g,
+        )
+        PortionSheet(
+            foodItem = foodItem,
+            initialMeal = entry.meal,
+            initialGrams = entry.grams,
+            targetDay = entry.day,
+            existingEntryId = entry.id,
+            onDismiss = { entryBeingEdited = null },
+            onSaveEntry = { updated ->
+                coroutineScope.launch {
+                    fuel.removeEntry(entry.id)
+                    fuel.addEntry(updated)
+                    entryBeingEdited = null
+                }
+            },
+        )
+    }
 
     val hasTargets = targets != Macros.ZERO
     val shouldShowInitialSheet = !hasTargets && !hasSkippedOnboarding
@@ -160,6 +189,7 @@ fun FuelScreen(
                 meal = meal,
                 entries = mealEntries,
                 onAddFood = { onFindFood(meal) },
+                onEditEntry = { entryBeingEdited = it },
                 onDeleteEntry = { entryId ->
                     coroutineScope.launch {
                         fuel.removeEntry(entryId)
@@ -384,6 +414,7 @@ private fun MealSection(
     meal: Meal,
     entries: List<MealEntry>,
     onAddFood: () -> Unit,
+    onEditEntry: (MealEntry) -> Unit,
     onDeleteEntry: (String) -> Unit,
 ) {
     val palette = LocalPalette.current
@@ -466,7 +497,11 @@ private fun MealSection(
                         }
                     },
                     content = {
-                        MealEntryRow(entry = entry, onDelete = { onDeleteEntry(entry.id) })
+                        MealEntryRow(
+                            entry = entry,
+                            onClick = { onEditEntry(entry) },
+                            onDelete = { onDeleteEntry(entry.id) },
+                        )
                     },
                 )
             }
@@ -477,11 +512,12 @@ private fun MealSection(
 @Composable
 private fun MealEntryRow(
     entry: MealEntry,
+    onClick: () -> Unit,
     onDelete: () -> Unit,
 ) {
     val palette = LocalPalette.current
 
-    GymBroCard {
+    GymBroCard(onClick = onClick) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
