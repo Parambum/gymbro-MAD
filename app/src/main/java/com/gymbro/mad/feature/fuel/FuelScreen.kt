@@ -18,23 +18,32 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.MonitorWeight
+import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,8 +57,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gymbro.mad.data.model.BodyWeightEntry
+import com.gymbro.mad.data.model.FoodItem
 import com.gymbro.mad.data.model.Macros
 import com.gymbro.mad.data.model.Meal
 import com.gymbro.mad.data.model.MealEntry
@@ -75,6 +88,8 @@ import kotlin.math.roundToInt
  * Covers:
  * - Ticket J-5: Targets Onboarding & Mifflin-St Jeor calculation.
  * - Ticket J-1: Fuel day screen: macro rings/meters, meal sections, day switcher.
+ * - Ticket J-4: Portion editing sheet on entry click.
+ * - Ticket J-6: Water (+250ml, +500ml) & body-weight quick log tiles.
  */
 @Composable
 fun FuelScreen(
@@ -89,10 +104,15 @@ fun FuelScreen(
     val targets by fuel.targets.collectAsStateWithLifecycle()
     val entries by remember(selectedDay) { fuel.entriesFor(selectedDay) }
         .collectAsStateWithLifecycle(initialValue = emptyList())
+    val waterMl by remember(selectedDay) { fuel.waterMlFor(selectedDay) }
+        .collectAsStateWithLifecycle(initialValue = 0)
+    val weights by fuel.weights.collectAsStateWithLifecycle()
+    val currentWeightEntry = weights.find { it.day == selectedDay }
 
     var showOnboardingSheet by rememberSaveable { mutableStateOf(false) }
     var hasSkippedOnboarding by rememberSaveable { mutableStateOf(false) }
     var entryBeingEdited by remember { mutableStateOf<MealEntry?>(null) }
+    var showWeightSheet by rememberSaveable { mutableStateOf(false) }
 
     entryBeingEdited?.let { entry ->
         val per100g = if (entry.grams > 0) {
@@ -100,7 +120,7 @@ fun FuelScreen(
         } else {
             entry.macros
         }
-        val foodItem = com.gymbro.mad.data.model.FoodItem(
+        val foodItem = FoodItem(
             id = entry.foodId,
             name = entry.name,
             per100g = per100g,
@@ -117,6 +137,20 @@ fun FuelScreen(
                     fuel.removeEntry(entry.id)
                     fuel.addEntry(updated)
                     entryBeingEdited = null
+                }
+            },
+        )
+    }
+
+    if (showWeightSheet) {
+        WeightLoggingSheet(
+            currentKg = currentWeightEntry?.kg,
+            day = selectedDay,
+            onDismiss = { showWeightSheet = false },
+            onSaveWeight = { kg ->
+                coroutineScope.launch {
+                    fuel.logWeight(BodyWeightEntry(day = selectedDay, kg = kg))
+                    showWeightSheet = false
                 }
             },
         )
@@ -160,6 +194,7 @@ fun FuelScreen(
         MicroLabel(
             text = "DAILY NUTRITION & TARGETS",
             color = palette.faint,
+            modifier = Modifier.padding(start = 2.dp),
         )
 
         Spacer(Modifier.height(16.dp))
@@ -180,6 +215,31 @@ fun FuelScreen(
             onOpenTargets = { showOnboardingSheet = true },
         )
 
+        Spacer(Modifier.height(16.dp))
+
+        // ── Ticket J-6: Water and Body-Weight Quick Log Tiles ─────────
+        // Visible on the day screen without scrolling to the bottom
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            WaterTile(
+                waterMl = waterMl,
+                onAddWater = { ml ->
+                    coroutineScope.launch {
+                        fuel.addWater(selectedDay, ml)
+                    }
+                },
+                modifier = Modifier.weight(1f),
+            )
+
+            WeighInTile(
+                weightEntry = currentWeightEntry,
+                onOpenWeighIn = { showWeightSheet = true },
+                modifier = Modifier.weight(1f),
+            )
+        }
+
         Spacer(Modifier.height(24.dp))
 
         // ── Four Meal Sections ─────────────────────────────────────
@@ -197,6 +257,279 @@ fun FuelScreen(
                 },
             )
             Spacer(Modifier.height(16.dp))
+        }
+    }
+}
+
+/**
+ * Water quick-log tile with +250ml and +500ml buttons (Ticket J-6).
+ */
+@Composable
+private fun WaterTile(
+    waterMl: Int,
+    onAddWater: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val palette = LocalPalette.current
+
+    GymBroCard(
+        modifier = modifier,
+        accent = palette.info,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = "$waterMl",
+                        style = NumericStyle,
+                        color = palette.info,
+                    )
+                    Text(
+                        text = " ml",
+                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                        color = palette.muted,
+                        modifier = Modifier.padding(bottom = 3.dp),
+                    )
+                }
+                MicroLabel("WATER LOGGED", color = palette.muted)
+            }
+            Icon(
+                imageVector = Icons.Default.Opacity,
+                contentDescription = null,
+                tint = palette.info,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            QuickWaterButton(
+                label = "+250 ml",
+                onClick = { onAddWater(250) },
+                modifier = Modifier.weight(1f),
+            )
+            QuickWaterButton(
+                label = "+500 ml",
+                onClick = { onAddWater(500) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuickWaterButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val palette = LocalPalette.current
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(palette.raised)
+            .clickable(onClick = onClick)
+            .padding(vertical = 6.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            style = MicroStyle,
+            fontWeight = FontWeight.Bold,
+            color = palette.info,
+        )
+    }
+}
+
+/**
+ * Body-weight tile showing today's weigh-in (Ticket J-6).
+ */
+@Composable
+private fun WeighInTile(
+    weightEntry: BodyWeightEntry?,
+    onOpenWeighIn: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val palette = LocalPalette.current
+
+    GymBroCard(
+        modifier = modifier,
+        accent = palette.accent,
+        onClick = onOpenWeighIn,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    if (weightEntry != null) {
+                        Text(
+                            text = String.format("%.1f", weightEntry.kg),
+                            style = NumericStyle,
+                            color = palette.accent,
+                        )
+                        Text(
+                            text = " kg",
+                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                            color = palette.muted,
+                            modifier = Modifier.padding(bottom = 3.dp),
+                        )
+                    } else {
+                        Text(
+                            text = "--",
+                            style = NumericStyle,
+                            color = palette.faint,
+                        )
+                    }
+                }
+                MicroLabel(
+                    text = if (weightEntry != null) "BODY WEIGHT" else "NO WEIGH-IN",
+                    color = palette.muted,
+                )
+            }
+            Icon(
+                imageVector = Icons.Default.Scale,
+                contentDescription = null,
+                tint = palette.accent,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(palette.raised)
+                .clickable(onClick = onOpenWeighIn)
+                .padding(vertical = 6.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = if (weightEntry != null) "UPDATE WEIGHT" else "LOG WEIGHT",
+                style = MicroStyle,
+                fontWeight = FontWeight.Bold,
+                color = palette.ink,
+            )
+        }
+    }
+}
+
+/**
+ * Bottom sheet to enter or update daily body weight (stored in kg).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WeightLoggingSheet(
+    currentKg: Double?,
+    day: LocalDate,
+    onDismiss: () -> Unit,
+    onSaveWeight: (Double) -> Unit,
+) {
+    val palette = LocalPalette.current
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var kgInput by rememberSaveable {
+        mutableStateOf(currentKg?.let { String.format("%.1f", it) } ?: "")
+    }
+
+    val parsedKg = kgInput.toDoubleOrNull()
+    val isValid = parsedKg != null && parsedKg in 20.0..350.0
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = palette.surface,
+        dragHandle = null,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 20.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column {
+                    Text(
+                        text = "Daily Weigh-in",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = palette.ink,
+                    )
+                    MicroLabel(
+                        text = day.format(DateTimeFormatter.ofPattern("EEE, d MMM")),
+                        color = palette.muted,
+                    )
+                }
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = palette.muted,
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = kgInput,
+                onValueChange = { input ->
+                    if (input.isEmpty() || input.all { it.isDigit() || it == '.' }) {
+                        kgInput = input
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Weight (kg)") },
+                placeholder = { Text("e.g. 74.5") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Scale,
+                        contentDescription = null,
+                        tint = palette.accent,
+                    )
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = palette.accent,
+                    unfocusedBorderColor = palette.border,
+                    focusedTextColor = palette.ink,
+                    unfocusedTextColor = palette.ink,
+                ),
+            )
+
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "One weigh-in per day: logging a second value replaces the earlier entry.",
+                style = MaterialTheme.typography.bodySmall,
+                color = palette.faint,
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            AccentButton(
+                text = "Save Weigh-in",
+                icon = Icons.Default.Scale,
+                enabled = isValid,
+                onClick = {
+                    if (parsedKg != null && isValid) {
+                        onSaveWeight(parsedKg)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -331,28 +664,24 @@ private fun NutritionHeaderCard(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            val pTarget = if (hasTargets) " / ${targets.proteinG.roundToInt()}" else ""
-            val cTarget = if (hasTargets) " / ${targets.carbsG.roundToInt()}" else ""
-            val fTarget = if (hasTargets) " / ${targets.fatG.roundToInt()}" else ""
-
-            StatTile(
+            MacroStatTile(
                 label = "PROTEIN",
-                value = "${dayTotal.proteinG.roundToInt()}$pTarget",
-                unit = "g",
+                consumed = dayTotal.proteinG.roundToInt(),
+                target = if (hasTargets) targets.proteinG.roundToInt() else null,
                 valueColor = palette.accent,
                 modifier = Modifier.weight(1f),
             )
-            StatTile(
+            MacroStatTile(
                 label = "CARBS",
-                value = "${dayTotal.carbsG.roundToInt()}$cTarget",
-                unit = "g",
+                consumed = dayTotal.carbsG.roundToInt(),
+                target = if (hasTargets) targets.carbsG.roundToInt() else null,
                 valueColor = palette.info,
                 modifier = Modifier.weight(1f),
             )
-            StatTile(
+            MacroStatTile(
                 label = "FAT",
-                value = "${dayTotal.fatG.roundToInt()}$fTarget",
-                unit = "g",
+                consumed = dayTotal.fatG.roundToInt(),
+                target = if (hasTargets) targets.fatG.roundToInt() else null,
                 valueColor = palette.warn,
                 modifier = Modifier.weight(1f),
             )
@@ -378,6 +707,58 @@ private fun NutritionHeaderCard(
                 color = palette.faint,
             )
         }
+    }
+}
+
+@Composable
+private fun MacroStatTile(
+    label: String,
+    consumed: Int,
+    target: Int?,
+    valueColor: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier,
+) {
+    val palette = LocalPalette.current
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(palette.raised)
+            .padding(horizontal = 10.dp, vertical = 10.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            Text(
+                text = "$consumed",
+                style = NumericStyle.copy(fontSize = 18.sp),
+                color = valueColor,
+            )
+            if (target != null) {
+                Text(
+                    text = " / ${target}g",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                    ),
+                    color = palette.muted,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier.padding(bottom = 2.dp, start = 2.dp),
+                )
+            } else {
+                Text(
+                    text = " g",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                    ),
+                    color = palette.faint,
+                    modifier = Modifier.padding(bottom = 2.dp, start = 2.dp),
+                )
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        MicroLabel(label)
     }
 }
 

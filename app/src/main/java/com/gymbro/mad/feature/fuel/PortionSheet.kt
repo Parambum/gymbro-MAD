@@ -111,7 +111,7 @@ fun PortionSheet(
     val palette = LocalPalette.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    var selectedMeal by rememberSaveable {
+    var selectedMeal by rememberSaveable(foodItem.id, initialMeal) {
         mutableStateOf(initialMeal ?: defaultMealForTime())
     }
     var gramsInput by rememberSaveable {

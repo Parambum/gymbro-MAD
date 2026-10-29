@@ -64,7 +64,9 @@ fun SectionHeader(
     trailing: @Composable (() -> Unit)? = null,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         MicroLabel(title, color = LocalPalette.current.muted)

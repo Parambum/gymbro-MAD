@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.gymbro.mad.data.model.Meal
 import com.gymbro.mad.feature.body.BodyScreen
 import com.gymbro.mad.feature.cardio.CardioScreen
 import com.gymbro.mad.feature.deck.DeckScreen
@@ -49,6 +50,7 @@ fun GymBroApp() {
     // Resets on relaunch by design: persisting it is ticket A-6, and a
     // half-persisted setting is worse than an obviously temporary one.
     var themeId by rememberSaveable { mutableStateOf(ThemeId.MOLTEN) }
+    var targetMealForSearch by rememberSaveable { mutableStateOf<Meal?>(null) }
 
     GymBroTheme(themeId) {
         val navController = rememberNavController()
@@ -104,10 +106,16 @@ fun GymBroApp() {
                 }
 
                 composable(Routes.FUEL) {
-                    FuelScreen(onFindFood = { navController.open(Routes.FOOD_SEARCH) })
+                    FuelScreen(
+                        onFindFood = { meal ->
+                            targetMealForSearch = meal
+                            navController.open(Routes.FOOD_SEARCH)
+                        },
+                    )
                 }
                 composable(Routes.FOOD_SEARCH) {
                     FoodSearchScreen(
+                        targetMeal = targetMealForSearch,
                         onPicked = { /* opens portion sheet */ },
                         onLogged = { navController.popBackStack() },
                     )

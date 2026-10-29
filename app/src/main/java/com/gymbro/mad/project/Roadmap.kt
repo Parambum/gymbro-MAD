@@ -59,7 +59,7 @@ object Roadmap {
         Ticket("J-3", "Barcode scanner behind a camera permission request", Owner.JOHN, 4, route = Routes.FOOD_SEARCH),
         Ticket("J-4", "Add and edit an entry: portion size, unit conversion", Owner.JOHN, 3, done = true, route = Routes.FUEL),
         Ticket("J-5", "Targets onboarding: Mifflin-St Jeor, with unit tests", Owner.JOHN, 2, done = true, route = Routes.FUEL),
-        Ticket("J-6", "Water and body-weight quick log", Owner.JOHN, 2, route = Routes.FUEL),
+        Ticket("J-6", "Water and body-weight quick log", Owner.JOHN, 2, done = true, route = Routes.FUEL),
 
         // ── Arnav: history, stats, platform ───────────────────────
         Ticket("A-1", "History grouped by week, plus the session detail route", Owner.ARNAV, 4, route = Routes.HISTORY),
