@@ -309,6 +309,8 @@ private fun WorkoutExerciseCard(
             }
         }
         Spacer(Modifier.height(8.dp))
+        ExerciseDemo(exercise.name, group?.accentArgb?.let { androidx.compose.ui.graphics.Color(it.toInt()) } ?: palette.accent)
+        Spacer(Modifier.height(4.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             MicroLabel("rest seconds")
             OutlinedTextField(

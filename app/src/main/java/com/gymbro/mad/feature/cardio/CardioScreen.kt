@@ -1,7 +1,6 @@
 package com.gymbro.mad.feature.cardio
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.combinedClickable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,9 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,7 +38,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.gymbro.mad.data.model.CardioActivity
 import com.gymbro.mad.data.model.CardioKind
-import com.gymbro.mad.data.model.RoutePoint
 import com.gymbro.mad.data.repo.CardioRepository
 import com.gymbro.mad.data.repo.Repos
 import com.gymbro.mad.ui.components.AccentButton
@@ -95,7 +90,7 @@ fun CardioScreen(modifier: Modifier = Modifier, cardio: CardioRepository = Repos
                 }
                 Text("${tracking.elapsedSeconds / 60}:${(tracking.elapsedSeconds % 60).toString().padStart(2, '0')} · $gpsDistance", color = palette.muted)
                 tracking.error?.let { Text(it, color = palette.danger) }
-                if (tracking.route.size > 1) RoutePreview(tracking.route, Modifier.fillMaxWidth().height(120.dp))
+                if (tracking.route.isNotEmpty()) LeafletRouteMap(tracking.route, Modifier.fillMaxWidth().height(180.dp))
                 AccentButton("Stop and save GPS activity", onClick = { GpsTrackingService.stop(context) }, Modifier.fillMaxWidth())
             }
         } else {
@@ -147,7 +142,7 @@ fun CardioScreen(modifier: Modifier = Modifier, cardio: CardioRepository = Repos
                         MicroLabel("pace ${activity.paceMinPerKm?.let { "${it.toInt()} min ${(it * 60).roundToInt() % 60} sec/km" } ?: "—"}")
                         if (activity.route.size > 1) {
                             MicroLabel("GPS route · ${activity.route.size} points", color = palette.muted)
-                            RoutePreview(activity.route, Modifier.fillMaxWidth().height(96.dp))
+                            LeafletRouteMap(activity.route, Modifier.fillMaxWidth().height(140.dp))
                         }
                     }
                 }
@@ -162,35 +157,3 @@ fun CardioScreen(modifier: Modifier = Modifier, cardio: CardioRepository = Repos
 }
 
 private fun Double.pretty() = if (this % 1.0 == 0.0) roundToInt().toString() else "%.1f".format(this)
-
-@Composable
-private fun RoutePreview(points: List<RoutePoint>, modifier: Modifier = Modifier) {
-    val palette = LocalPalette.current
-    Canvas(modifier) {
-        if (points.size < 2) return@Canvas
-        val minLat = points.minOf { it.latitude }
-        val maxLat = points.maxOf { it.latitude }
-        val minLon = points.minOf { it.longitude }
-        val maxLon = points.maxOf { it.longitude }
-        val latRange = (maxLat - minLat).coerceAtLeast(0.00001)
-        val lonRange = (maxLon - minLon).coerceAtLeast(0.00001)
-        val inset = 12.dp.toPx()
-        val width = (size.width - inset * 2).coerceAtLeast(1f)
-        val height = (size.height - inset * 2).coerceAtLeast(1f)
-        val path = Path()
-        points.forEachIndexed { index, point ->
-            val x = inset + ((point.longitude - minLon) / lonRange).toFloat() * width
-            val y = inset + (1f - ((point.latitude - minLat) / latRange).toFloat()) * height
-            if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
-        }
-        drawPath(path, palette.accent, style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round))
-        val first = points.first()
-        val last = points.last()
-        val startX = inset + ((first.longitude - minLon) / lonRange).toFloat() * width
-        val startY = inset + (1f - ((first.latitude - minLat) / latRange).toFloat()) * height
-        val endX = inset + ((last.longitude - minLon) / lonRange).toFloat() * width
-        val endY = inset + (1f - ((last.latitude - minLat) / latRange).toFloat()) * height
-        drawCircle(palette.ink, radius = 5.dp.toPx(), center = androidx.compose.ui.geometry.Offset(startX, startY))
-        drawCircle(palette.accent, radius = 5.dp.toPx(), center = androidx.compose.ui.geometry.Offset(endX, endY))
-    }
-}
