@@ -68,6 +68,65 @@
    - Confine changes to data/repo/, feature/fuel/FoodSearchScreen.kt, and gradle/libs.versions.toml.
    - Mark done = true for ticket J-2 in project/Roadmap.kt.
 
+## J-1: Fuel Day Screen & Dashboard
+1. **Day Navigation & Macro Overview:**
+   - Day switcher at the top to move between days (yesterday, today, past dates) and tap to return to today.
+   - Intake vs Target card showing total consumed calories vs Mifflin-St Jeor target.
+   - Individual macro stat tiles for Protein, Carbs, and Fat aligned cleanly on a single baseline (intake / target g) without wrapping numbers across lines.
+   - Visual progress meter bars for Protein (accent), Carbs (info), and Fat (warn).
+2. **Meal Sections:**
+   - Four sections: Breakfast, Lunch, Dinner, and Snack.
+   - Each section shows its subtotal calories.
+   - Honest empty state per section when no food is logged.
+   - Swipe-to-dismiss gesture or trash icon to delete logged food items.
+3. **Design & State:**
+   - Colors from `LocalPalette.current`.
+   - Reactive collection with `collectAsStateWithLifecycle()`.
+   - Mark `done = true` for ticket J-1 in `project/Roadmap.kt`.
+
+## J-4: Portion Sheet, Unit Scaling & Meal Routing
+1. **Live Macro Calculation:**
+   - Bottom sheet for adding or editing an entry.
+   - Grams / volume input with live macro and calorie scaling: `foodItem.per100g.scaled(grams / 100.0)`.
+   - Quick portion chips: 50g, 100g, 150g (1 katori), 200g (1 cup/bowl), 250g.
+2. **Target Meal Routing:**
+   - When tapping "+ Add" on a specific meal section (e.g. Breakfast), pre-select that meal rather than defaulting strictly to the current time of day.
+   - If opened generally, infer default meal from current device time.
+3. **Edit Support & Immutable Log:**
+   - Tapping an existing log row reuses the same portion sheet pre-populated with its current grams and meal.
+   - Macros stored directly on the entry so editing food databases later does not silently change past historical logs.
+4. **Design & State:**
+   - Mark `done = true` for ticket J-4 in `project/Roadmap.kt`.
+
+## J-6: Water and Body-Weight Quick Log
+1. **Water Quick Log Tile:**
+   - Display total water logged today in ml with water droplet icon.
+   - Two quick-tap increment buttons: "+250 ml" and "+500 ml".
+   - Persist water intake asynchronously per date in `FuelRepository`.
+2. **Body Weight Tile & Sheet:**
+   - Display today's weigh-in in kg (or "--" if none logged).
+   - Tap opens `WeightLoggingSheet` to record or update today's weight.
+   - Enforce one weigh-in per day (logging again replaces today's earlier entry).
+3. **Tests & Roadmap:**
+   - Pure JVM unit test verifying water accumulation and weight updates.
+   - Mark `done = true` for ticket J-6 in `project/Roadmap.kt`.
+
+## J-3: Barcode Scanner (CameraX + Google ML Kit)
+1. **CameraX & ML Kit Integration:**
+   - Add CameraX (`1.4.1`) and Google ML Kit Barcode Scanning (`17.3.0`) in `libs.versions.toml` and `app/build.gradle.kts`.
+   - Add `<uses-permission android:name="android.permission.CAMERA"/>` to `AndroidManifest.xml`.
+   - Scan button in search screen opening camera preview with scanner reticle overlay and flashlight toggle.
+   - Reads EAN-13, UPC-A, EAN-8, UPC-E, and QR codes.
+2. **Permission Flow & Fallbacks:**
+   - Request `CAMERA` permission only when user taps scan, never on screen launch.
+   - Denying permission leaves manual text search fully functional with an explanatory banner.
+   - Scanned barcode queries `foodRepository.byBarcode(code)`.
+   - If barcode is unknown, display dialog offering to add the food by hand (`ManualFoodEntrySheet`) instead of dead-ending.
+   - Release and unbind camera cleanly when leaving composition.
+3. **Tests & Roadmap:**
+   - JVM unit test in `BarcodeScannerTest.kt` verifying barcode lookup and manual fallback.
+   - Mark `done = true` for ticket J-3 in `project/Roadmap.kt`.
+
 #ADI
 
 
