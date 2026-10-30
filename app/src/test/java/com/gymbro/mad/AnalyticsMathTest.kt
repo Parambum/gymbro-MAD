@@ -22,6 +22,6 @@ class AnalyticsMathTest {
     @Test
     fun `empty and zero-volume windows stay unlit`() {
         assertTrue(normaliseMuscleVolume(emptyList()).isEmpty())
-        assertEquals(mapOf("arms" to 0f), normaliseMuscleVolume(listOf(MuscleVolume("arms", 0.0, 0))))
+        assertTrue(normaliseMuscleVolume(listOf(MuscleVolume("arms", 0.0, 0))).isEmpty())
     }
 }
