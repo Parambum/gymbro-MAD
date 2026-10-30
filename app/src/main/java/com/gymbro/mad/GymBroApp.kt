@@ -1,13 +1,17 @@
 package com.gymbro.mad
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -16,6 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.gymbro.mad.data.model.Meal
+import com.gymbro.mad.data.repo.UserPreferences
 import com.gymbro.mad.feature.body.BodyScreen
 import com.gymbro.mad.feature.cardio.CardioScreen
 import com.gymbro.mad.feature.deck.DeckScreen
@@ -35,7 +40,9 @@ import com.gymbro.mad.ui.nav.InnerRoutes
 import com.gymbro.mad.ui.nav.Tab
 import com.gymbro.mad.ui.theme.GymBroTheme
 import com.gymbro.mad.ui.theme.LocalPalette
+import com.gymbro.mad.ui.theme.LocalWeightUnit
 import com.gymbro.mad.ui.theme.ThemeId
+import kotlinx.coroutines.launch
 
 /**
  * The whole app: theme, chrome, and one navigation graph.
@@ -43,18 +50,21 @@ import com.gymbro.mad.ui.theme.ThemeId
  * Every route in the app is declared here and nowhere else, so adding a screen
  * is one entry in this file plus one file of your own. Screens receive
  * `onOpenX` lambdas rather than the NavController itself - a screen that can
- * navigate anywhere is a screen you cannot preview or test, and four people
+ * navigate anywhere is a screen you cannot preview or test, and three people
  * calling navigate() from inside their own features is how a back stack stops
  * making sense.
  */
 @Composable
 fun GymBroApp() {
-    // Resets on relaunch by design: persisting it is ticket A-6, and a
-    // half-persisted setting is worse than an obviously temporary one.
-    var themeId by rememberSaveable { mutableStateOf(ThemeId.MOLTEN) }
+    val context = LocalContext.current
+    val preferences = remember(context) { UserPreferences(context) }
+    val themeId by preferences.theme.collectAsStateWithLifecycle(initialValue = ThemeId.MOLTEN)
+    val weightUnit by preferences.weightUnit.collectAsStateWithLifecycle(initialValue = com.gymbro.mad.ui.theme.WeightUnit.KG)
+    val scope = rememberCoroutineScope()
     var targetMealForSearch by rememberSaveable { mutableStateOf<Meal?>(null) }
 
-    GymBroTheme(themeId) {
+    CompositionLocalProvider(LocalWeightUnit provides weightUnit) {
+      GymBroTheme(themeId) {
         val navController = rememberNavController()
         val backStackEntry by navController.currentBackStackEntryAsState()
         val route = backStackEntry?.destination?.route
@@ -65,7 +75,7 @@ fun GymBroApp() {
             topBar = {
                 GymBroTopBar(
                     route = route,
-                    onToggleTheme = { themeId = themeId.next() },
+                    onToggleTheme = { scope.launch { preferences.setTheme(themeId.next()) } },
                     onOpenProfile = { navController.open(Routes.PROFILE) },
                     onBack = if (route in InnerRoutes) {
                         { navController.popBackStack() }
@@ -161,10 +171,16 @@ fun GymBroApp() {
                 composable(Routes.CARDIO) { CardioScreen() }
 
                 composable(Routes.PROFILE) {
-                    ProfileScreen(themeId = themeId, onThemeChange = { themeId = it })
+                    ProfileScreen(
+                        themeId = themeId,
+                        onThemeChange = { selected -> scope.launch { preferences.setTheme(selected) } },
+                        weightUnit = weightUnit,
+                        onWeightUnitChange = { selected -> scope.launch { preferences.setWeightUnit(selected) } },
+                    )
                 }
             }
         }
+      }
     }
 }
 

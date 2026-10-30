@@ -27,7 +27,7 @@ import java.time.temporal.TemporalAdjusters
  * THE SEAM.
  *
  * Screens talk to these interfaces and never to a database, a network client
- * or each other. That is the whole reason four people can work on this app at
+ * or each other. That is the whole reason three people can work on this app at
  * once: the Train screen can be half-built while the Deck already reads
  * finished sessions, and swapping the in-memory store for Room (ticket A-5)
  * touches no screen at all.
@@ -121,7 +121,7 @@ interface AnalyticsRepository {
 // ══ in-memory implementations ═════════════════════════════════════
 //
 // The in-memory implementations are used by tests and previews. The app wires
-// persisted workout and cardio repositories; Fuel remains in memory until A-5.
+// Room-backed repositories in Repos.initialize().
 
 class InMemoryWorkoutRepository(
     initialSessions: List<WorkoutSession> = emptyList(),
@@ -358,7 +358,7 @@ class DerivedAnalyticsRepository(
  * Where the implementations are chosen, and the only place in the app that
  * knows which they are.
  *
- * A hand-rolled locator rather than Hilt: four people learning Compose do not
+ * A hand-rolled locator rather than Hilt: three people learning Compose do not
  * also need to learn an annotation processor, and swapping this for real
  * dependency injection later is a one-file change. Screens take repositories
  * as parameters with these as defaults, so a test or a @Preview can pass its
@@ -369,14 +369,17 @@ object Repos {
         private set
     var cardio: CardioRepository = InMemoryCardioRepository()
         private set
-    val fuel: FuelRepository = InMemoryFuelRepository()
+    var fuel: FuelRepository = InMemoryFuelRepository()
+        private set
     val food: FoodRepository = NetworkFoodRepository()
     var analytics: AnalyticsRepository = DerivedAnalyticsRepository(workouts)
         private set
 
     fun initialize(context: android.content.Context) {
-        workouts = PersistentWorkoutRepository(context.applicationContext)
-        cardio = PersistentCardioRepository(context.applicationContext)
+        val database = AppDatabase.open(context.applicationContext)
+        workouts = RoomWorkoutRepository(context.applicationContext, database)
+        cardio = RoomCardioRepository(context.applicationContext, database)
+        fuel = RoomFuelRepository(database)
         analytics = DerivedAnalyticsRepository(workouts)
     }
 }

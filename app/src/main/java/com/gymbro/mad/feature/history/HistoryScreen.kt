@@ -49,6 +49,7 @@ import com.gymbro.mad.ui.components.MicroLabel
 import com.gymbro.mad.ui.components.SectionHeader
 import com.gymbro.mad.ui.components.StatTile
 import com.gymbro.mad.ui.theme.LocalPalette
+import com.gymbro.mad.ui.theme.LocalWeightUnit
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -251,6 +252,7 @@ private fun historyRows(
 @Composable
 private fun WeekHeader(week: WeekHistory, modifier: Modifier = Modifier) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
     val formatter = DateTimeFormatter.ofPattern("d MMM")
     val strengthSessions = week.items.filterIsInstance<HistoryItem.Strength>().map { it.session }
     val volume = strengthSessions.sumOf { it.volumeKg }
@@ -261,7 +263,7 @@ private fun WeekHeader(week: WeekHistory, modifier: Modifier = Modifier) {
         Spacer(Modifier.height(6.dp))
         MicroLabel(
             text = "${week.items.size} activities · " +
-                "${volume.roundToInt()} kg strength volume",
+                "${weightUnit.fromKilograms(volume).roundToInt()} ${weightUnit.suffix} strength volume",
             color = palette.faint,
         )
     }
@@ -274,6 +276,7 @@ private fun WorkoutHistoryCard(
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
     GymBroCard(
         modifier = modifier,
         accent = palette.accent,
@@ -300,7 +303,7 @@ private fun WorkoutHistoryCard(
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             StatTile("duration", formatDuration(session), Modifier.weight(1f))
-            StatTile("volume", "${session.volumeKg.roundToInt()}", Modifier.weight(1f), unit = "kg")
+            StatTile("volume", "${weightUnit.fromKilograms(session.volumeKg).roundToInt()}", Modifier.weight(1f), unit = weightUnit.suffix)
             StatTile("sets", "${session.completedSets}", Modifier.weight(1f))
         }
     }

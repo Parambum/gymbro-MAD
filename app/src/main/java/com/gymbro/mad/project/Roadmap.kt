@@ -15,7 +15,6 @@ package com.gymbro.mad.project
 
 enum class Owner(val displayName: String, val initials: String, val area: String) {
     ADITYA("Aditya", "AP", "Base, 3D, Deck"),
-    PREM("Prem", "PR", "Train and Cardio"),
     JOHN("John", "JO", "Fuel"),
     ARNAV("Arnav", "AR", "Train, Cardio, History, Stats, platform"),
 }
@@ -66,12 +65,11 @@ object Roadmap {
         Ticket("A-1", "History grouped by week, plus the session detail route", Owner.ARNAV, 4, done = true, route = Routes.HISTORY),
         Ticket("A-2", "Stats screen: volume per muscle group, PR table", Owner.ARNAV, 3, done = true, route = Routes.STATS),
         Ticket("A-3", "Charts on Canvas: weekly volume bars, body-weight line", Owner.ARNAV, 4, done = true, route = Routes.STATS),
-        // the tint itself is wired; what is missing is the reading of it
-        Ticket("A-4", "Body heat map: window switch, volume legend, undertrained nudges", Owner.ARNAV, 2, route = Routes.BODY),
-        Ticket("A-5", "Room persistence behind the existing repository interfaces", Owner.ARNAV, 4),
-        Ticket("A-6", "Profile and settings: theme switch, units, bundled fonts", Owner.ARNAV, 2, route = Routes.PROFILE),
-        Ticket("A-7", "Tests: stats maths and a Compose test for the tab bar", Owner.ARNAV, 1),
-        Ticket("A-8", "GitHub Actions: assembleDebug and unit tests on every PR", Owner.ARNAV, 1),
+        Ticket("A-4", "Body heat map: window switch, volume legend, undertrained nudges", Owner.ARNAV, 2, done = true, route = Routes.BODY),
+        Ticket("A-5", "Room persistence behind the existing repository interfaces", Owner.ARNAV, 4, done = true),
+        Ticket("A-6", "Profile and settings: theme switch, units, bundled fonts", Owner.ARNAV, 2, done = true, route = Routes.PROFILE),
+        Ticket("A-7", "Tests: stats maths and a Compose test for the tab bar", Owner.ARNAV, 1, done = true),
+        Ticket("A-8", "GitHub Actions: assembleDebug and unit tests on every PR", Owner.ARNAV, 1, done = true),
     )
 
     fun forOwner(owner: Owner): List<Ticket> = tickets.filter { it.owner == owner }

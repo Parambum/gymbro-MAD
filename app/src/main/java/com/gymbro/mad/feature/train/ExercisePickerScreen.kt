@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gymbro.mad.data.catalog.ExerciseCatalog
 import com.gymbro.mad.data.model.Exercise
+import com.gymbro.mad.ui.components.AccentButton
 import com.gymbro.mad.ui.components.EmptyState
 import com.gymbro.mad.ui.components.GymBroCard
 import com.gymbro.mad.ui.components.GymBroChip
@@ -44,6 +45,7 @@ fun ExercisePickerScreen(
     val palette = LocalPalette.current
     var query by remember { mutableStateOf("") }
     var selectedGroup by remember { mutableStateOf<String?>(null) }
+    var previewExercise by remember { mutableStateOf<Exercise?>(null) }
     val results = ExerciseCatalog.search(query, selectedGroup)
 
     Column(modifier.fillMaxSize().padding(horizontal = 16.dp).padding(top = 12.dp)) {
@@ -81,7 +83,27 @@ fun ExercisePickerScreen(
                 )
             }
         }
+        MicroLabel("Tap an exercise to preview its demo, then add it to your workout.", color = palette.muted)
         Spacer(Modifier.height(8.dp))
+        previewExercise?.let { exercise ->
+            val group = ExerciseCatalog.group(exercise.groupSlug)
+            GymBroCard(accent = group?.accentArgb?.let { Color(it.toInt()) }) {
+                Text(exercise.name, color = palette.ink, style = MaterialTheme.typography.titleMedium)
+                MicroLabel(group?.displayName ?: exercise.groupSlug, color = palette.muted)
+                Spacer(Modifier.height(8.dp))
+                ExerciseDemo(
+                    exerciseName = exercise.name,
+                    accent = group?.accentArgb?.let { Color(it.toInt()) } ?: palette.accent,
+                )
+                Spacer(Modifier.height(8.dp))
+                AccentButton(
+                    text = "Add to workout",
+                    onClick = { onPicked(exercise.id) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+        }
         if (results.isEmpty()) {
             EmptyState(
                 title = "No matching exercises",
@@ -98,7 +120,11 @@ fun ExercisePickerScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(results, key = Exercise::id) { exercise ->
-                    ExerciseRow(exercise = exercise, onClick = { onPicked(exercise.id) })
+                    ExerciseRow(
+                        exercise = exercise,
+                        selected = previewExercise?.id == exercise.id,
+                        onClick = { previewExercise = exercise },
+                    )
                 }
             }
         }
@@ -106,10 +132,10 @@ fun ExercisePickerScreen(
 }
 
 @Composable
-private fun ExerciseRow(exercise: Exercise, onClick: () -> Unit) {
+private fun ExerciseRow(exercise: Exercise, selected: Boolean, onClick: () -> Unit) {
     val palette = LocalPalette.current
     val group = ExerciseCatalog.group(exercise.groupSlug)
-    GymBroCard(onClick = onClick) {
+    GymBroCard(accent = if (selected) group?.accentArgb?.let { Color(it.toInt()) } else null, onClick = onClick) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Spacer(
                 Modifier

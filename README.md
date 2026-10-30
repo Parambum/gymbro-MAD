@@ -1,5 +1,7 @@
 # GymBro — Android (MAD project)
 
+![Android CI](https://github.com/Parambum/gymbro-MAD/actions/workflows/android.yml/badge.svg)
+
 A native Android strength tracker in Kotlin and Jetpack Compose: log a lifting
 session, see the volume land on a 3D body map, and track what you ate against
 what you were aiming for.
@@ -9,9 +11,9 @@ Development course. It is a native rewrite, not a wrapper: the GymBro website
 (Next.js + MongoDB) is a separate project, and the only things that cross over
 are the design tokens and the exercise catalog, both ported deliberately.
 
-**This repo is a base.** Four of us are building on it. Roughly 40% is done —
-the parts everything else needs — and the remaining work is split between
-John and Arnav. See **[TASKS.md](TASKS.md)** for who owns what, and
+The planned app work is implemented. The Deck reads the shared roadmap in
+`Roadmap.kt` and reports 100% when every tracked ticket is complete. See
+**[TASKS.md](TASKS.md)** for the feature checklist and
 **[CONTRIBUTING.md](CONTRIBUTING.md)** before your first commit.
 
 ---
@@ -31,7 +33,7 @@ Open the folder in Android Studio and press Run, or from the terminal:
 
 ```bash
 ./gradlew installDebug          # build and install on a connected device
-./gradlew testDebugUnitTest     # 32 unit tests, no device needed
+./gradlew testDebugUnitTest     # JVM unit tests, no device needed
 ./gradlew assembleDebug         # APK in app/build/outputs/apk/debug/
 ```
 
@@ -51,23 +53,20 @@ settings in `gradle.properties` are deliberately small for that reason.
 | **Theme** | Three palettes (Molten, Court, Classic) ported from the website, animated on switch. Type scale, shapes, 13 colour tokens. |
 | **Component kit** | `GymBroCard`, `StatTile`, `GymBroChip`, `AccentButton`, `GhostButton`, `EmptyState`, `MeterBar`, `SectionHeader`, `MicroLabel`. |
 | **Navigation** | Six tabs + five inner routes, one graph, back stack behaving like a tab bar should. |
-| **Data layer** | Models, repository interfaces, analytics derived from logged sessions, and local persistence for workouts and cardio activities, including GPS routes. Fuel remains in memory. |
+| **Data layer** | Models, repository interfaces, analytics derived from logged sessions, and Room persistence for workouts, active sessions, cardio routes, meal entries, water, body weight and targets. |
 | **Catalog** | 11 muscle groups × 191 movements, generated from the website's catalog so both agree on slugs. |
 | **3D body map** | A low-poly figure drawn by a software renderer written from scratch — no 3D engine, no model files. Drag, pinch, tap a muscle. |
-| **Train** | Start and discard sessions, find catalog movements, edit weight/reps, mark completed sets, rest timer, and finish-session summaries. |
+| **Train** | Start and discard sessions, find catalog movements, preview the exercise demonstration, edit weight/reps, mark completed sets, rest timer, and finish-session summaries. |
 | **Cardio** | Log activities manually or record a GPS route in the background with an ongoing notification. |
 | **History** | Strength and cardio activity timeline grouped by week, with all-time/date filters, workout summaries, and full strength-session details. |
 | **Stats** | 4/8/12-week summaries, completed-set volume by muscle, weekly volume and exercise load charts, personal bests, and a body-weight trend when at least two weigh-ins exist. |
 | **Fuel** | Day screen with a day switcher, macro progress and meal sections; food search and a barcode scanner (CameraX + ML Kit); a portion sheet with live macro scaling; Mifflin-St Jeor targets onboarding; water and body-weight quick log. |
-| **Deck** | The home screen, wired to the repositories, with honest empty states. |
-| **Tests** | JVM tests cover geometry, repository rules, analytics, catalog integrity, workout backup encoding, Fuel day and portion maths, the barcode scanner, and the water and weight log. |
+| **Deck** | The home screen, wired to the repositories, with honest empty states and the live project completion dashboard. |
+| **Tests** | JVM tests cover geometry, repository rules, analytics, catalog integrity, workout backup encoding, Fuel day and portion maths, the barcode scanner, and water and weight logging. Android UI and Room repository tests cover navigation and persistence behavior. |
 
-## What is still in progress
-
-Profile/settings, complete body-map analytics and Room persistence are still
-roadmap work. Workout sessions and their active draft, plus cardio activities
-and GPS routes, are stored locally on-device; Fuel entries and targets remain
-in memory. The app does not sign in or sync with the website.
+The app stores data locally and does not sign in or sync with the website.
+Exercise demonstration images are loaded from the public exercise database,
+so viewing them requires an internet connection.
 
 ---
 
@@ -88,14 +87,14 @@ app/src/main/java/com/gymbro/mad/
 ├── data/
 │   ├── model/               every stored shape, free of Compose and Android
 │   ├── catalog/             GENERATED exercise catalog
-│   └── repo/                interfaces, derived analytics, local workout store
+│   └── repo/                interfaces, derived analytics, Room persistence
 ├── project/Roadmap.kt       the task list, in code
 └── feature/<area>/          one folder per owner's screens
 ```
 
-**One file per screen, one folder per area.** It is not tidiness: four people
-editing four folders almost never produces a merge conflict, and four people
-editing one `Screens.kt` always does.
+**One file per screen, one folder per area.** It is not tidiness: contributors
+working in separate feature folders rarely produce a merge conflict, and one
+shared `Screens.kt` becomes hard to maintain.
 
 ## How the pieces fit
 

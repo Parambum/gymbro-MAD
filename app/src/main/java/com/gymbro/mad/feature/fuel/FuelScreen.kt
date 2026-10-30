@@ -76,6 +76,7 @@ import com.gymbro.mad.ui.components.MicroLabel
 import com.gymbro.mad.ui.components.SectionHeader
 import com.gymbro.mad.ui.components.StatTile
 import com.gymbro.mad.ui.theme.LocalPalette
+import com.gymbro.mad.ui.theme.LocalWeightUnit
 import com.gymbro.mad.ui.theme.MicroStyle
 import com.gymbro.mad.ui.theme.NumericStyle
 import kotlinx.coroutines.launch
@@ -98,6 +99,7 @@ fun FuelScreen(
     onFindFood: (meal: Meal?) -> Unit = {},
 ) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
     val coroutineScope = rememberCoroutineScope()
 
     var selectedDay by rememberSaveable { mutableStateOf(LocalDate.now()) }
@@ -144,12 +146,13 @@ fun FuelScreen(
 
     if (showWeightSheet) {
         WeightLoggingSheet(
-            currentKg = currentWeightEntry?.kg,
+            currentWeight = currentWeightEntry?.kg?.let(weightUnit::fromKilograms),
+            weightUnit = weightUnit,
             day = selectedDay,
             onDismiss = { showWeightSheet = false },
-            onSaveWeight = { kg ->
+            onSaveWeight = { displayWeight ->
                 coroutineScope.launch {
-                    fuel.logWeight(BodyWeightEntry(day = selectedDay, kg = kg))
+                    fuel.logWeight(BodyWeightEntry(day = selectedDay, kg = weightUnit.toKilograms(displayWeight)))
                     showWeightSheet = false
                 }
             },
@@ -359,6 +362,7 @@ private fun WeighInTile(
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
 
     GymBroCard(
         modifier = modifier,
@@ -374,12 +378,12 @@ private fun WeighInTile(
                 Row(verticalAlignment = Alignment.Bottom) {
                     if (weightEntry != null) {
                         Text(
-                            text = String.format("%.1f", weightEntry.kg),
+                            text = weightUnit.format(weightEntry.kg),
                             style = NumericStyle,
                             color = palette.accent,
                         )
                         Text(
-                            text = " kg",
+                            text = " ${weightUnit.suffix}",
                             style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                             color = palette.muted,
                             modifier = Modifier.padding(bottom = 3.dp),
@@ -432,18 +436,20 @@ private fun WeighInTile(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WeightLoggingSheet(
-    currentKg: Double?,
+    currentWeight: Double?,
+    weightUnit: com.gymbro.mad.ui.theme.WeightUnit,
     day: LocalDate,
     onDismiss: () -> Unit,
     onSaveWeight: (Double) -> Unit,
 ) {
     val palette = LocalPalette.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var kgInput by rememberSaveable {
-        mutableStateOf(currentKg?.let { String.format("%.1f", it) } ?: "")
+    var weightInput by rememberSaveable {
+        mutableStateOf(currentWeight?.let { String.format("%.1f", it) } ?: "")
     }
 
-    val parsedKg = kgInput.toDoubleOrNull()
+    val parsedWeight = weightInput.toDoubleOrNull()
+    val parsedKg = parsedWeight?.let(weightUnit::toKilograms)
     val isValid = parsedKg != null && parsedKg in 20.0..350.0
 
     ModalBottomSheet(
@@ -485,14 +491,14 @@ private fun WeightLoggingSheet(
             Spacer(Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = kgInput,
+                value = weightInput,
                 onValueChange = { input ->
                     if (input.isEmpty() || input.all { it.isDigit() || it == '.' }) {
-                        kgInput = input
+                        weightInput = input
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Weight (kg)") },
+                label = { Text("Weight (${weightUnit.suffix})") },
                 placeholder = { Text("e.g. 74.5") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 leadingIcon = {
@@ -524,8 +530,8 @@ private fun WeightLoggingSheet(
                 icon = Icons.Default.Scale,
                 enabled = isValid,
                 onClick = {
-                    if (parsedKg != null && isValid) {
-                        onSaveWeight(parsedKg)
+                    if (parsedWeight != null && isValid) {
+                        onSaveWeight(parsedWeight)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),

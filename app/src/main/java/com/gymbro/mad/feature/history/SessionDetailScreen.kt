@@ -36,6 +36,7 @@ import com.gymbro.mad.ui.components.MicroLabel
 import com.gymbro.mad.ui.components.SectionHeader
 import com.gymbro.mad.ui.components.StatTile
 import com.gymbro.mad.ui.theme.LocalPalette
+import com.gymbro.mad.ui.theme.LocalWeightUnit
 import java.time.Duration
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -61,6 +62,7 @@ fun SessionDetailScreen(
     }
 
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
     val recordSets = sessionRecordSets(session, sessions)
     val muscleVolumes = session.exercises
         .groupBy { it.groupSlug }
@@ -92,7 +94,7 @@ fun SessionDetailScreen(
         Spacer(Modifier.height(16.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             StatTile("duration", formatDuration(session.duration), Modifier.weight(1f))
-            StatTile("volume", "${session.volumeKg.roundToInt()}", Modifier.weight(1f), unit = "kg")
+            StatTile("volume", "${weightUnit.fromKilograms(session.volumeKg).roundToInt()}", Modifier.weight(1f), unit = weightUnit.suffix)
             StatTile("sets", "${session.completedSets}", Modifier.weight(1f))
         }
 
@@ -113,7 +115,7 @@ fun SessionDetailScreen(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Text(
-                        text = "${totals.first.roundToInt()} kg · ${totals.second} sets",
+                        text = "${weightUnit.fromKilograms(totals.first).roundToInt()} ${weightUnit.suffix} · ${totals.second} sets",
                         color = group?.accentArgb?.let { Color(it.toInt()) } ?: palette.ink,
                         style = MaterialTheme.typography.labelLarge,
                     )
@@ -144,6 +146,7 @@ fun SessionDetailScreen(
 @Composable
 private fun ExerciseDetailCard(exercise: LoggedExercise, recordSetIds: Set<String>) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
     val group = ExerciseCatalog.group(exercise.groupSlug)
     GymBroCard(
         accent = group?.accentArgb?.let { Color(it.toInt()) } ?: palette.accent,
@@ -158,7 +161,7 @@ private fun ExerciseDetailCard(exercise: LoggedExercise, recordSetIds: Set<Strin
                 MicroLabel(group?.displayName ?: exercise.groupSlug, color = palette.muted)
             }
             Text(
-                "${exercise.volumeKg.roundToInt()} kg",
+                "${weightUnit.fromKilograms(exercise.volumeKg).roundToInt()} ${weightUnit.suffix}",
                 color = palette.accentInk,
                 style = MaterialTheme.typography.labelLarge,
             )
@@ -181,7 +184,7 @@ private fun ExerciseDetailCard(exercise: LoggedExercise, recordSetIds: Set<Strin
                     MicroLabel("set ${index + 1}", modifier = Modifier.weight(1f))
                     Text(
                         text = if (set.completed) {
-                            "${formatWeight(set.weightKg)} kg × ${set.reps}"
+                            "${weightUnit.format(set.weightKg)} ${weightUnit.suffix} × ${set.reps}"
                         } else {
                             "Skipped"
                         },

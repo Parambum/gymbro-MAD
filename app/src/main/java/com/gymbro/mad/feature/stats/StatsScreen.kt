@@ -42,6 +42,7 @@ import com.gymbro.mad.ui.components.SectionHeader
 import com.gymbro.mad.ui.components.StatTile
 import com.gymbro.mad.ui.components.WeeklyVolumeChart
 import com.gymbro.mad.ui.theme.LocalPalette
+import com.gymbro.mad.ui.theme.LocalWeightUnit
 import java.time.Duration
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -55,6 +56,7 @@ fun StatsScreen(
     fuel: FuelRepository = Repos.fuel,
 ) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
     val sessions by workouts.sessions.collectAsStateWithLifecycle()
     val bests by analytics.personalBests().collectAsStateWithLifecycle(initialValue = emptyList())
     val weights by fuel.weights.collectAsStateWithLifecycle()
@@ -144,7 +146,7 @@ fun StatsScreen(
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatTile("window volume", "${volume.roundToInt()}", Modifier.weight(1f), unit = "kg")
+            StatTile("window volume", "${weightUnit.fromKilograms(volume).roundToInt()}", Modifier.weight(1f), unit = weightUnit.suffix)
             StatTile("window time", formatDuration(totalDuration), Modifier.weight(1f))
         }
 
@@ -156,12 +158,12 @@ fun StatsScreen(
                 body = "You've logged ${recentSessions.size} sessions in this window. " +
                     "The chart appears after three; these totals already reflect your real sessions.",
             )
-            WeekVolumeSummary(weeks)
+            WeekVolumeSummary(weeks, weightUnit)
         } else if (weeks.isNotEmpty()) {
             selectedWeek?.let {
                 MicroLabel(
                     text = "${it.weekStart.format(DateTimeFormatter.ofPattern("d MMM"))} · " +
-                        "${it.volumeKg.roundToInt()} kg · ${it.sessions} sessions",
+                        "${weightUnit.fromKilograms(it.volumeKg).roundToInt()} ${weightUnit.suffix} · ${it.sessions} sessions",
                     color = palette.accentInk,
                 )
             }
@@ -192,7 +194,7 @@ fun StatsScreen(
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         MicroLabel(
-                            "${volumeByMuscle.volumeKg.roundToInt()} kg · ${volumeByMuscle.sets} sets",
+                            "${weightUnit.fromKilograms(volumeByMuscle.volumeKg).roundToInt()} ${weightUnit.suffix} · ${volumeByMuscle.sets} sets",
                             color = palette.muted,
                         )
                     }
@@ -232,11 +234,11 @@ fun StatsScreen(
             selectedProgress?.let { point ->
                 MicroLabel(
                     text = "${point.session.date.format(DateTimeFormatter.ofPattern("d MMM yyyy"))} · " +
-                        "${formatWeight(point.weightKg)} kg × ${point.reps}",
+                        "${weightUnit.format(point.weightKg)} ${weightUnit.suffix} × ${point.reps}",
                     color = palette.accentInk,
                 )
                 ProgressionChart(
-                    values = progression.map { it.weightKg },
+                    values = progression.map { weightUnit.fromKilograms(it.weightKg) },
                     selectedIndex = selectedProgressIndex.coerceIn(0, progression.lastIndex),
                     onSelect = { selectedProgressIndex = it },
                 )
@@ -271,11 +273,11 @@ fun StatsScreen(
             val selectedWeight = orderedWeights[selectedWeightIndex]
             MicroLabel(
                 text = "${selectedWeight.day.format(DateTimeFormatter.ofPattern("d MMM yyyy"))} · " +
-                    "${formatWeight(selectedWeight.kg)} kg",
+                    "${weightUnit.format(selectedWeight.kg)} ${weightUnit.suffix}",
                 color = palette.accentInk,
             )
             ProgressionChart(
-                values = orderedWeights.map(BodyWeightEntry::kg),
+                values = orderedWeights.map { weightUnit.fromKilograms(it.kg) },
                 selectedIndex = selectedWeightIndex,
                 onSelect = { selectedBodyWeightIndex = it },
             )
@@ -293,7 +295,7 @@ private fun cutoffDate(windowWeeks: Int): LocalDate =
     LocalDate.now().minusDays(windowWeeks * 7L - 1)
 
 @Composable
-private fun WeekVolumeSummary(weeks: List<WeekVolume>) {
+private fun WeekVolumeSummary(weeks: List<WeekVolume>, weightUnit: com.gymbro.mad.ui.theme.WeightUnit) {
     val palette = LocalPalette.current
     weeks.takeLast(4).forEach { week ->
         Row(
@@ -305,7 +307,7 @@ private fun WeekVolumeSummary(weeks: List<WeekVolume>) {
                 color = palette.muted,
             )
             MicroLabel(
-                "${week.volumeKg.roundToInt()} kg · ${week.sessions} sessions",
+                "${weightUnit.fromKilograms(week.volumeKg).roundToInt()} ${weightUnit.suffix} · ${week.sessions} sessions",
                 color = palette.faint,
             )
         }
@@ -315,6 +317,7 @@ private fun WeekVolumeSummary(weeks: List<WeekVolume>) {
 @Composable
 private fun PersonalBestCard(best: PersonalBest) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
     GymBroCard(accent = palette.accent2) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(Modifier.weight(1f)) {
@@ -325,14 +328,14 @@ private fun PersonalBestCard(best: PersonalBest) {
                 )
                 MicroLabel(
                     "${best.achievedOn.format(DateTimeFormatter.ofPattern("d MMM yyyy"))} · " +
-                        "${formatWeight(best.weightKg)} kg × ${best.reps}",
+                        "${weightUnit.format(best.weightKg)} ${weightUnit.suffix} × ${best.reps}",
                     color = palette.muted,
                 )
             }
             Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
                 Text(
-                    if (best.reps <= 10) "${formatWeight(best.estimated1RmKg)} kg"
-                    else "${formatWeight(best.weightKg)} kg",
+                    if (best.reps <= 10) "${weightUnit.format(best.estimated1RmKg)} ${weightUnit.suffix}"
+                    else "${weightUnit.format(best.weightKg)} ${weightUnit.suffix}",
                     color = palette.accentInk,
                     style = MaterialTheme.typography.titleMedium,
                 )

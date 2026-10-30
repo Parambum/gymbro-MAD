@@ -39,6 +39,7 @@ import com.gymbro.mad.ui.components.MicroLabel
 import com.gymbro.mad.ui.components.SectionHeader
 import com.gymbro.mad.ui.components.StatTile
 import com.gymbro.mad.ui.theme.LocalPalette
+import com.gymbro.mad.ui.theme.LocalWeightUnit
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
@@ -126,6 +127,7 @@ private fun SessionCard(
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
 
     if (active != null) {
         GymBroCard(modifier = modifier, accent = palette.accent) {
@@ -142,8 +144,8 @@ private fun SessionCard(
                 StatTile("sets", "${active.completedSets}", Modifier.weight(1f))
                 StatTile(
                     label = "volume",
-                    value = "${active.volumeKg.roundToInt()}",
-                    unit = "kg",
+                    value = "${weightUnit.fromKilograms(active.volumeKg).roundToInt()}",
+                    unit = weightUnit.suffix,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -191,8 +193,8 @@ private fun SessionCard(
                 StatTile("sets", "${last.completedSets}", Modifier.weight(1f))
                 StatTile(
                     label = "volume",
-                    value = "${last.volumeKg.roundToInt()}",
-                    unit = "kg",
+                    value = "${weightUnit.fromKilograms(last.volumeKg).roundToInt()}",
+                    unit = weightUnit.suffix,
                     modifier = Modifier.weight(1f),
                 )
                 StatTile("time", formatDuration(last.duration), Modifier.weight(1f))
@@ -211,6 +213,7 @@ private fun SessionCard(
 @Composable
 private fun WeekRow(week: WeekVolume?, modifier: Modifier = Modifier) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
 
     if (week == null || week.sessions == 0) {
         GymBroCard(modifier = modifier) {
@@ -234,8 +237,8 @@ private fun WeekRow(week: WeekVolume?, modifier: Modifier = Modifier) {
         StatTile("sessions", "${week.sessions}", Modifier.weight(1f))
         StatTile(
             label = "volume",
-            value = "${week.volumeKg.roundToInt()}",
-            unit = "kg",
+            value = "${weightUnit.fromKilograms(week.volumeKg).roundToInt()}",
+            unit = weightUnit.suffix,
             modifier = Modifier.weight(1f),
             valueColor = palette.accentInk,
         )
@@ -253,7 +256,7 @@ private fun QuickAction(
 }
 
 /**
- * Where the four of us are. It reads [Roadmap], which the unbuilt screens also
+ * Where the team is. It reads [Roadmap], which the unbuilt screens also
  * read, so there is one list of work in the whole project and the Deck cannot
  * disagree with the tab you are looking at.
  */

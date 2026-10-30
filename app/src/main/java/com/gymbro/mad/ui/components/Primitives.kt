@@ -34,7 +34,7 @@ import com.gymbro.mad.ui.theme.NumericStyle
 
 /**
  * The component kit. Every screen in the app is built from these, which is
- * what stops four people producing four different-looking apps.
+ * what stops the team producing different-looking screens.
  *
  * If a screen needs something that is not here, add it here rather than
  * in-lining it: the second copy of a card is where a design starts drifting.

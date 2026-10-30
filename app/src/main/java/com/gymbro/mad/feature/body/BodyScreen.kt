@@ -44,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.nativeCanvas
@@ -60,12 +61,14 @@ import com.gymbro.mad.anatomy.buildAnatomyScene
 import com.gymbro.mad.data.catalog.ExerciseCatalog
 import com.gymbro.mad.data.model.MuscleVolume
 import com.gymbro.mad.data.repo.AnalyticsRepository
+import com.gymbro.mad.data.repo.normaliseMuscleVolume
 import com.gymbro.mad.data.repo.Repos
 import com.gymbro.mad.ui.components.GymBroCard
 import com.gymbro.mad.ui.components.GymBroChip
 import com.gymbro.mad.ui.components.MicroLabel
 import com.gymbro.mad.ui.components.SectionHeader
 import com.gymbro.mad.ui.theme.LocalPalette
+import com.gymbro.mad.ui.theme.LocalWeightUnit
 import com.gymbro.mad.ui.theme.MicroStyle
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -89,6 +92,7 @@ fun BodyScreen(
     onOpenExercises: (() -> Unit)? = null,
 ) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
 
     // The rig is ~1,800 triangles of generated geometry: built once per
     // process, not once per recomposition.
@@ -102,10 +106,11 @@ fun BodyScreen(
 
     var selectedSlug by remember { mutableStateOf<String?>(null) }
     var autoRotate by remember { mutableStateOf(true) }
+    var windowDays by remember { mutableStateOf(28) }
 
-    val volumes by analytics.muscleVolume(days = 28)
+    val volumes by analytics.muscleVolume(days = windowDays)
         .collectAsStateWithLifecycle(initialValue = emptyList())
-    val intensity = remember(volumes) { normalise(volumes) }
+    val intensity = remember(volumes) { normaliseMuscleVolume(volumes) }
 
     // Only subscribed to while something is selected, so an idle screen is a
     // still screen rather than a 60fps battery drain.
@@ -203,6 +208,30 @@ fun BodyScreen(
 
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Row(
+                Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                listOf(7, 28, 90).forEach { days ->
+                    GymBroChip(
+                        label = "$days days",
+                        selected = days == windowDays,
+                        onClick = { windowDays = days },
+                    )
+                }
+            }
+            MicroLabel("Muscle volume · brighter means more", color = palette.muted)
+            Spacer(Modifier.height(6.dp))
+            val peakVolume = volumes.maxOfOrNull { it.volumeKg } ?: 0.0
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                MicroLabel("0", color = palette.faint)
+                Box(
+                    Modifier.weight(1f).padding(horizontal = 8.dp).height(5.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(Brush.horizontalGradient(listOf(palette.raised, palette.accent.copy(alpha = 0.72f)))),
+                )
+                MicroLabel("${weightUnit.fromKilograms(peakVolume).roundToInt()} ${weightUnit.suffix}", color = palette.faint)
+            }
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
@@ -210,8 +239,9 @@ fun BodyScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 scene.zones.forEach { zone ->
+                    val volume = volumes.firstOrNull { it.groupSlug == zone.slug }
                     GymBroChip(
-                        label = zone.displayName,
+                        label = if (volume == null || volume.sets == 0) "${zone.displayName} · untrained" else "${zone.displayName} · ${weightUnit.fromKilograms(volume.volumeKg).roundToInt()} ${weightUnit.suffix}",
                         selected = zone.slug == selectedSlug,
                         accent = Color(zone.accentArgb),
                         onClick = {
@@ -235,7 +265,7 @@ fun BodyScreen(
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = "Tap the figure or a chip to see what you have been " +
-                            "training. Brighter means more volume over the last 28 days.",
+                            "training. Brighter means more volume over the last $windowDays days.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = palette.muted,
                     )
@@ -244,6 +274,7 @@ fun BodyScreen(
                 SelectedGroupCard(
                     slug = slug,
                     volume = volumes.firstOrNull { it.groupSlug == slug },
+                    days = windowDays,
                     onOpenExercises = onOpenExercises,
                 )
             }
@@ -256,10 +287,12 @@ fun BodyScreen(
 private fun SelectedGroupCard(
     slug: String,
     volume: MuscleVolume?,
+    days: Int,
     onOpenExercises: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
     val group = ExerciseCatalog.group(slug) ?: return
     val accent = Color(group.accentArgb)
     val movements = ExerciseCatalog.forGroup(slug).size
@@ -276,14 +309,14 @@ private fun SelectedGroupCard(
         }
 
         Spacer(Modifier.height(12.dp))
-        SectionHeader("last 28 days")
+        SectionHeader("last $days days")
         Spacer(Modifier.height(8.dp))
 
         if (volume == null || volume.sets == 0) {
             // Honest empty: this group has had no work, and the figure shows
             // it unlit. Do not substitute a plausible-looking number here.
             Text(
-                text = "Nothing logged for this group yet.",
+                text = "Untrained in the last $days days. A fresh group to work on.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.muted,
             )
@@ -291,11 +324,11 @@ private fun SelectedGroupCard(
             Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                 Column {
                     Text(
-                        text = "${volume.volumeKg.roundToInt()}",
+                        text = "${weightUnit.fromKilograms(volume.volumeKg).roundToInt()}",
                         style = MaterialTheme.typography.titleLarge,
                         color = accent,
                     )
-                    MicroLabel("kg volume")
+                    MicroLabel("${weightUnit.suffix} volume")
                 }
                 Column {
                     Text(
@@ -347,13 +380,6 @@ private fun OverlayButton(
             modifier = Modifier.size(18.dp),
         )
     }
-}
-
-/** 0f..1f per muscle group, scaled against the hardest-worked one. */
-private fun normalise(volumes: List<MuscleVolume>): Map<String, Float> {
-    val peak = volumes.maxOfOrNull { it.volumeKg } ?: return emptyMap()
-    if (peak <= 0.0) return emptyMap()
-    return volumes.associate { it.groupSlug to (it.volumeKg / peak).toFloat() }
 }
 
 @Composable

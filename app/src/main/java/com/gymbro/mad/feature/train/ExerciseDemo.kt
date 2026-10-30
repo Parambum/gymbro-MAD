@@ -38,6 +38,7 @@ import org.json.JSONArray
 import java.net.URL
 
 private const val DEMO_CDN = "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/"
+private const val DEMO_RAW = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/master/exercises/"
 
 internal data class ExerciseDemoData(
     val exerciseName: String,
@@ -77,16 +78,17 @@ private object ExerciseDemoImages {
         override fun sizeOf(key: String, value: Bitmap): Int = value.byteCount
     }
 
-    suspend fun get(url: String): Bitmap? = withContext(Dispatchers.IO) {
-        bitmaps.get(url) ?: runCatching {
-            val connection = URL(url).openConnection().apply {
-                connectTimeout = 10_000
-                readTimeout = 15_000
-            }
-            val bitmap = connection.getInputStream().use { BitmapFactory.decodeStream(it) } ?: return@runCatching null
-            bitmaps.put(url, bitmap)
-            bitmap
-        }.getOrNull()
+    suspend fun get(path: String): Bitmap? = withContext(Dispatchers.IO) {
+        val key = DEMO_CDN + path
+        bitmaps.get(key) ?: listOf(DEMO_CDN, DEMO_RAW).firstNotNullOfOrNull { host ->
+            runCatching {
+                val connection = URL(host + path).openConnection().apply {
+                    connectTimeout = 5_000
+                    readTimeout = 8_000
+                }
+                connection.getInputStream().use { BitmapFactory.decodeStream(it) }
+            }.getOrNull()?.also { bitmaps.put(key, it) }
+        }
     }
 }
 
@@ -97,10 +99,16 @@ internal fun ExerciseDemo(exerciseName: String, accent: Color) {
     val demo = remember(exerciseName) { ExerciseDemoCatalog.load(context.applicationContext)[exerciseName] }
     var frames by remember(exerciseName) { mutableStateOf(emptyList<Bitmap>()) }
     var frameIndex by remember(exerciseName) { mutableIntStateOf(0) }
+    var loading by remember(exerciseName) { mutableStateOf(demo != null) }
 
     LaunchedEffect(demo) {
-        frames = demo?.imagePaths.orEmpty().mapNotNull { path -> ExerciseDemoImages.get(DEMO_CDN + path) }
+        frames = emptyList()
         frameIndex = 0
+        loading = demo != null
+        demo?.imagePaths.orEmpty().forEach { path ->
+            ExerciseDemoImages.get(path)?.let { frame -> frames = frames + frame }
+        }
+        loading = false
     }
     LaunchedEffect(frames) {
         if (frames.size > 1) {
@@ -128,7 +136,11 @@ internal fun ExerciseDemo(exerciseName: String, accent: Color) {
                 )
             } else {
                 Text(
-                    if (demo == null) "Demo unavailable" else "Loading demo…",
+                    when {
+                        demo == null -> "No demo is mapped for this exercise"
+                        loading -> "Loading ${demo.demoName} demonstration…"
+                        else -> "${demo.demoName} demonstration couldn't load. Check internet, then reopen the exercise."
+                    },
                     color = palette.muted,
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -143,8 +155,6 @@ internal fun ExerciseDemo(exerciseName: String, accent: Color) {
         }
         if (demo != null && demo.demoName != exerciseName) {
             MicroLabel("Related movement demo · ${demo.demoName}", color = accent)
-        } else if (frames.isEmpty() && demo != null) {
-            MicroLabel("Connect to the internet to load this demo", color = palette.muted)
         }
     }
 }

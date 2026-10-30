@@ -1,6 +1,6 @@
 # Contributing
 
-Four people, one app, one semester. These rules exist so none of us spends an
+Three contributors, one app, one semester. These rules exist so none of us spends an
 evening resolving a merge conflict instead of building a screen.
 
 ## Own your folder
@@ -30,7 +30,7 @@ yourself, even if it is one line — they may be mid-rewrite of that file.
 ```bash
 git checkout main
 git pull
-git checkout -b prem/p3-active-session     # <you>/<ticket>-<what>
+git checkout -b arnav/p3-active-session    # <you>/<ticket>-<what>
 ```
 
 One branch per ticket. Branch from an up-to-date `main`, and pull `main` into

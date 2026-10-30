@@ -43,6 +43,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -62,6 +63,7 @@ import com.gymbro.mad.ui.components.MicroLabel
 import com.gymbro.mad.ui.components.SectionHeader
 import com.gymbro.mad.ui.components.StatTile
 import com.gymbro.mad.ui.theme.LocalPalette
+import com.gymbro.mad.ui.theme.LocalWeightUnit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.Duration
@@ -78,6 +80,7 @@ fun TrainScreen(
     onOpenSummary: (String) -> Unit = {},
 ) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
     val trainViewModel: TrainViewModel = viewModel(
         factory = TrainViewModelFactory(workouts),
     )
@@ -93,6 +96,7 @@ fun TrainScreen(
     val requestNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     var restEndAt by rememberSaveable { mutableStateOf<Long?>(null) }
     var restTotalSeconds by rememberSaveable { mutableStateOf(90) }
+    val trainScrollState = rememberScrollState()
 
     LaunchedEffect(currentSession?.id) {
         while (currentSession != null) {
@@ -105,6 +109,8 @@ fun TrainScreen(
         val exercise = selectedExerciseId?.let(ExerciseCatalog::exercise)
         if (exercise != null && currentSession != null) {
             trainViewModel.addExercise(currentSession.id, exercise)
+            withFrameNanos { }
+            trainScrollState.animateScrollTo(trainScrollState.maxValue)
         }
         if (selectedExerciseId != null) onExerciseConsumed()
     }
@@ -112,7 +118,7 @@ fun TrainScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(trainScrollState)
             .padding(horizontal = 16.dp)
             .padding(top = 12.dp, bottom = 28.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -153,7 +159,7 @@ fun TrainScreen(
                     MicroLabel(last.date.toString(), color = palette.muted)
                     Spacer(Modifier.height(10.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        StatTile("volume", "${last.volumeKg.roundToInt()}", Modifier.weight(1f), unit = "kg")
+                        StatTile("volume", "${weightUnit.fromKilograms(last.volumeKg).roundToInt()}", Modifier.weight(1f), unit = weightUnit.suffix)
                         StatTile("sets", "${last.completedSets}", Modifier.weight(1f))
                     }
                 }
@@ -169,7 +175,7 @@ fun TrainScreen(
                         formatDuration(Duration.between(session.startedAt, elapsedNow)),
                         Modifier.weight(1f),
                     )
-                    StatTile("volume", "${session.volumeKg.roundToInt()}", Modifier.weight(1f), unit = "kg")
+                    StatTile("volume", "${weightUnit.fromKilograms(session.volumeKg).roundToInt()}", Modifier.weight(1f), unit = weightUnit.suffix)
                     StatTile("sets", "${session.completedSets}", Modifier.weight(1f))
                 }
             }
@@ -293,6 +299,7 @@ private fun WorkoutExerciseCard(
     onSetCompleted: (String, Int) -> Unit,
 ) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val group = ExerciseCatalog.group(exercise.groupSlug)
     var restSeconds by rememberSaveable(exercise.exerciseId) { mutableStateOf(90) }
@@ -323,7 +330,7 @@ private fun WorkoutExerciseCard(
         }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             MicroLabel("set", Modifier.weight(0.7f))
-            MicroLabel("kg", Modifier.weight(1f))
+            MicroLabel(weightUnit.suffix, Modifier.weight(1f))
             MicroLabel("reps", Modifier.weight(1f))
             Spacer(Modifier.width(42.dp))
         }
@@ -352,7 +359,7 @@ private fun WorkoutExerciseCard(
             PersonalBest(exercise.exerciseId, exercise.name, it.weightKg, it.reps, session.date).estimated1RmKg
         }
         if (best != null && best.reps > 0) {
-            MicroLabel("estimated 1RM · ${formatWeight(PersonalBest(exercise.exerciseId, exercise.name, best.weightKg, best.reps, session.date).estimated1RmKg)} kg", color = palette.muted)
+            MicroLabel("estimated 1RM · ${weightUnit.format(PersonalBest(exercise.exerciseId, exercise.name, best.weightKg, best.reps, session.date).estimated1RmKg)} ${weightUnit.suffix}", color = palette.muted)
         }
         GhostButton(
             text = "Add set",
@@ -384,7 +391,8 @@ private fun SetLoggerRow(
     onDelete: () -> Unit,
 ) {
     val palette = LocalPalette.current
-    var weightText by remember(set.id) { mutableStateOf(formatWeight(set.weightKg)) }
+    val weightUnit = LocalWeightUnit.current
+    var weightText by remember(set.id, weightUnit) { mutableStateOf(weightUnit.format(set.weightKg)) }
     var repsText by remember(set.id) { mutableStateOf(set.reps.toString()) }
     var rpeText by remember(set.id) { mutableStateOf(set.rpe?.let(::formatWeight).orEmpty()) }
     val weightValid = weightText.toDoubleOrNull()?.let { it.isFinite() && it in 0.0..1000.0 } == true
@@ -399,7 +407,7 @@ private fun SetLoggerRow(
             onValueChange = { value ->
                 weightText = value
                 value.toDoubleOrNull()?.takeIf { it.isFinite() && it in 0.0..1000.0 }?.let {
-                    onChange(set.copy(weightKg = it))
+                    onChange(set.copy(weightKg = weightUnit.toKilograms(it)))
                 }
             },
             singleLine = true,

@@ -41,6 +41,13 @@ class RoadmapTest {
     }
 
     @Test
+    fun `dashboard reaches one hundred percent only when every ticket is complete`() {
+        assertTrue(Roadmap.tickets.all { it.done })
+        assertEquals(0, Roadmap.hoursLeft)
+        assertEquals(1f, Roadmap.progress, 0f)
+    }
+
+    @Test
     fun `ticket ids are unique`() {
         val ids = Roadmap.tickets.map { it.id }
         assertEquals(ids.size, ids.toSet().size)

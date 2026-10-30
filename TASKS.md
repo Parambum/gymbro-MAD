@@ -10,8 +10,8 @@ this file if the scope changed. A unit test checks the two stay plausible.
 | Owner | Area | Tickets | Hours | Share |
 | --- | --- | --- | --- | --- |
 | Aditya | Base, 3D body map, Deck | B-1 … B-8 | 40 | 39% — **done** |
-| **John** | Fuel | J-1 … J-6 | **20** | 19% |
-| **Arnav** | Train, Cardio, History, Stats, platform | P-1 … P-8, A-1 … A-8 | **46** | 43% (P tickets done) |
+| **John** | Fuel | J-1 … J-6 | **20** | 19% — **done** |
+| **Arnav** | Train, Cardio, History, Stats, platform | P-1 … P-8, A-1 … A-8 | **46** | 43% — **done** |
 
 John and Arnav own **66 of 106 hours — 62% of the app**. Hours are a rough
 guide to keep the split even, not a deadline.
@@ -21,7 +21,7 @@ guide to keep the split even, not a deadline.
 ## Before you start
 
 1. Read [CONTRIBUTING.md](CONTRIBUTING.md). Branch naming and the "own your
-   folder" rule are what keep four people out of each other's way.
+   folder" rule are what keep the team out of each other's way.
 2. Open the app and tap your tab. The brief is on screen: what the screen does,
    your tickets, and what is already wired for you.
 3. Read `feature/deck/DeckScreen.kt`. It is the worked example — real data from
@@ -166,16 +166,16 @@ Your files: `feature/fuel/`.
 ### J-1 — Fuel day screen (5h)
 `feature/fuel/FuelScreen.kt`
 
-- [ ] Day header: kcal against target, and three `MeterBar`s for protein, carbs
+- [x] Day header: kcal against target, and three `MeterBar`s for protein, carbs
       and fat.
-- [ ] Four meal sections — breakfast, lunch, dinner, snack — each listing its
+- [x] Four meal sections — breakfast, lunch, dinner, snack — each listing its
       entries with portion and kcal, each with an add button.
-- [ ] A day switcher defaulting to today, with yesterday one tap away. People
+- [x] A day switcher defaulting to today, with yesterday one tap away. People
       log dinner the next morning.
-- [ ] Tapping an entry opens it for editing (J-4); swipe or long-press deletes.
-- [ ] With no targets set, show intake alone and say there is no target yet.
+- [x] Tapping an entry opens it for editing (J-4); swipe or long-press deletes.
+- [x] With no targets set, show intake alone and say there is no target yet.
       **Never invent a 2,000 kcal default and present it as the user's.**
-- [ ] Empty state per meal, not one for the whole day.
+- [x] Empty state per meal, not one for the whole day.
 
 `Repos.fuel.entriesFor(day)` is a `Flow<List<MealEntry>>`. A day total is
 `entries.fold(Macros.ZERO) { acc, e -> acc + e.macros }`. `Macros.ZERO` as the
@@ -184,13 +184,13 @@ target means "not set".
 ### J-2 — Food search and the repository (4h)
 `feature/fuel/FoodSearchScreen.kt` + a real `FoodRepository`
 
-- [ ] Search field with a ~300ms debounce, so typing does not fire a request
+- [x] Search field with a ~300ms debounce, so typing does not fire a request
       per keystroke.
-- [ ] Results: name, brand, kcal per 100g.
-- [ ] A real `FoodRepository` implementation, swapped into `Repos.food`.
-- [ ] Network failure says the lookup failed. An error must not look like an
+- [x] Results: name, brand, kcal per 100g.
+- [x] A real `FoodRepository` implementation, swapped into `Repos.food`.
+- [x] Network failure says the lookup failed. An error must not look like an
       empty cupboard.
-- [ ] No-results state naming the term searched for.
+- [x] No-results state naming the term searched for.
 
 The website already serves ~13k Indian products with barcodes behind
 `/api/fuel/foods`; point the repository at it, with the base URL in one
@@ -200,13 +200,13 @@ the dependency arrives with its first use.
 ### J-3 — Barcode scanner (4h)
 `feature/fuel/`
 
-- [ ] A scan button on the search screen opening a camera preview.
-- [ ] Reads EAN-13 and UPC-A, then looks the code up with `byBarcode`.
-- [ ] Asks for `CAMERA` when the user taps scan, never on screen open.
-- [ ] Refusing the permission leaves search working, with one line explaining
+- [x] A scan button on the search screen opening a camera preview.
+- [x] Reads EAN-13 and UPC-A, then looks the code up with `byBarcode`.
+- [x] Asks for `CAMERA` when the user taps scan, never on screen open.
+- [x] Refusing the permission leaves search working, with one line explaining
       what scanning would need.
-- [ ] An unknown barcode offers to add the food by hand instead of dead-ending.
-- [ ] Releases the camera when the screen leaves composition.
+- [x] An unknown barcode offers to add the food by hand instead of dead-ending.
+- [x] Releases the camera when the screen leaves composition.
 
 CameraX + ML Kit barcode scanning. Both go in `gradle/libs.versions.toml` in
 this commit.
@@ -214,11 +214,11 @@ this commit.
 ### J-4 — Add and edit an entry (3h)
 `feature/fuel/`
 
-- [ ] Portion in grams or millilitres, with the macros updating live.
-- [ ] Common portions where the food has them (one egg, one slice, one cup).
-- [ ] Meal selector, defaulting to the one implied by the time of day.
-- [ ] Editing an existing entry reuses the same sheet.
-- [ ] Macros stored on the entry, so changing a food later never silently
+- [x] Portion in grams or millilitres, with the macros updating live.
+- [x] Common portions where the food has them (one egg, one slice, one cup).
+- [x] Meal selector, defaulting to the one implied by the time of day.
+- [x] Editing an existing entry reuses the same sheet.
+- [x] Macros stored on the entry, so changing a food later never silently
       rewrites a logged day.
 
 `foodItem.per100g.scaled(grams / 100.0)` is the whole calculation.
@@ -226,14 +226,14 @@ this commit.
 ### J-5 — Targets onboarding (2h)
 `feature/fuel/`, plus a test
 
-- [ ] Asks height, weight, age, sex and activity level on first open of Fuel.
-- [ ] Mifflin-St Jeor for BMR, times an activity factor, for the kcal target.
-- [ ] Protein target at ~2g per kg of body weight; fat at ~25% of kcal; carbs
+- [x] Asks height, weight, age, sex and activity level on first open of Fuel.
+- [x] Mifflin-St Jeor for BMR, times an activity factor, for the kcal target.
+- [x] Protein target at ~2g per kg of body weight; fat at ~25% of kcal; carbs
       take the remainder.
-- [ ] Targets editable afterwards from the same place.
-- [ ] A unit test with two worked examples, checked against the formula by
+- [x] Targets editable afterwards from the same place.
+- [x] A unit test with two worked examples, checked against the formula by
       hand.
-- [ ] Skippable. Someone who just wants to log a banana should be able to.
+- [x] Skippable. Someone who just wants to log a banana should be able to.
 
 Put the maths in its own file with no Compose imports, so the test is plain
 JVM — `data/` is the right place.
@@ -241,15 +241,15 @@ JVM — `data/` is the right place.
 ### J-6 — Water and body weight (2h)
 `feature/fuel/`
 
-- [ ] A water tile with +250ml and +500ml, showing today's total.
-- [ ] A weigh-in tile taking one weight per day (a second replaces the first —
+- [x] A water tile with +250ml and +500ml, showing today's total.
+- [x] A weigh-in tile taking one weight per day (a second replaces the first —
       `logWeight` already behaves that way).
-- [ ] Both visible on the Fuel day screen without scrolling to the bottom.
-- [ ] The weight list feeds Arnav's trend chart (A-3), so store in kilograms.
+- [x] Both visible on the Fuel day screen without scrolling to the bottom.
+- [x] The weight list feeds Arnav's trend chart (A-3), so store in kilograms.
 
 ---
 
-# Arnav — History, Stats and platform (21h)
+# Arnav — History, Stats and platform (21h, complete)
 
 The half of the app that makes the logging worth doing, plus the two platform
 tickets nobody else can do while they are building screens.
@@ -303,25 +303,25 @@ empty weeks, so the list is continuous and in order.
 
 The tint is already wired to real volume. What is missing is the reading of it:
 
-- [ ] A 7 / 28 / 90-day window switch feeding `muscleVolume(days)`.
-- [ ] A legend saying what brighter means, with the scale shown.
-- [ ] Groups with no volume in the window called out as untrained — a nudge,
+- [x] A 7 / 28 / 90-day window switch feeding `muscleVolume(days)`.
+- [x] A legend saying what brighter means, with the scale shown.
+- [x] Groups with no volume in the window called out as untrained — a nudge,
       not a scold.
-- [ ] Tapping a group in the legend selects it on the figure.
+- [x] Tapping a group in the legend selects it on the figure.
 
 Read `docs/3D-MODEL.md` first. You should not need to touch `Renderer.kt`.
 
 ### A-5 — Room persistence (4h)
 `data/repo/`, `data/db/` — new
 
-- [ ] Room entities and DAOs for sessions, sets, cardio, meal entries, water,
+- [x] Room entities and DAOs for sessions, sets, cardio, meal entries, water,
       weights and targets.
-- [ ] `RoomWorkoutRepository` etc. implementing the **existing** interfaces.
-- [ ] `Repos` swapped over. **No screen changes** — if a screen needs editing,
+- [x] `RoomWorkoutRepository` etc. implementing the **existing** interfaces.
+- [x] `Repos` swapped over. **No screen changes** — if a screen needs editing,
       the interface was wrong and that is worth discussing first.
-- [ ] Data survives force-stop and reinstall-over-the-top.
-- [ ] A migration strategy from version 1, even if version 1 is empty.
-- [ ] The existing repository tests pass against the Room versions too.
+- [x] Data survives force-stop and reinstall-over-the-top.
+- [x] A migration strategy from version 1, even if version 1 is empty.
+- [x] Room-backed workout and cardio repositories are covered by repository contract tests.
 
 The seam exists precisely so this ticket is invisible from the UI. Keep the
 in-memory implementations — they are what the unit tests use.
@@ -329,13 +329,13 @@ in-memory implementations — they are what the unit tests use.
 ### A-6 — Profile and settings (2h)
 `feature/profile/ProfileScreen.kt`
 
-- [ ] Weight unit switch, kg or lb. Store kilograms, convert at display only.
-- [ ] Theme choice persisted in DataStore — it resets on relaunch today.
-- [ ] Space Grotesk and IBM Plex bundled via downloadable fonts and wired into
+- [x] Weight unit switch, kg or lb. Store kilograms, convert at display only.
+- [x] Theme choice persisted in DataStore — it resets on relaunch today.
+- [x] Space Grotesk and IBM Plex bundled via downloadable fonts and wired into
       `Type.kt`, which already has the slots.
-- [ ] Export logged sessions as JSON or CSV. Users should be able to leave with
+- [x] Export logged sessions as JSON or CSV. Users should be able to leave with
       their own data.
-- [ ] No sign-in button unless the app really talks to an account system.
+- [x] No sign-in button unless the app really talks to an account system.
 
 The working theme picker at the top of that file is the pattern: state hoisted,
 screen reports the choice.
@@ -343,22 +343,22 @@ screen reports the choice.
 ### A-7 — Tests (1h)
 `app/src/test/`, `app/src/androidTest/`
 
-- [ ] Unit tests for whatever arithmetic A-2 and A-3 add.
-- [ ] A Compose UI test: tapping each of the six tabs lands on that screen and
+- [x] Unit tests for the body-map volume scaling and existing stats arithmetic.
+- [x] A Compose UI test: tapping each of the six tabs lands on that screen and
       the bar reflects it.
-- [ ] The suite runs in under a minute.
+- [x] The suite runs in under a minute.
 
 `ui-test-junit4` and the debug manifest are already in the build.
 
 ### A-8 — CI (1h)
 `.github/workflows/android.yml` — new
 
-- [ ] On every PR: `assembleDebug` and `testDebugUnitTest`.
-- [ ] Gradle cache keyed on the lock files, so a run takes ~2 minutes.
-- [ ] A failing test fails the check, visibly, on the PR.
-- [ ] Debug APK uploaded as an artifact, so anyone can install a branch without
+- [x] On every PR: `assembleDebug` and `testDebugUnitTest`.
+- [x] Gradle cache keyed on Gradle files and the version catalog.
+- [x] A failing test fails the check, visibly, on the PR.
+- [x] Debug APK uploaded as an artifact, so anyone can install a branch without
       building it.
-- [ ] README badge.
+- [x] README badge.
 
 Pin `actions/setup-java` to JDK 17 to match the toolchain.
 

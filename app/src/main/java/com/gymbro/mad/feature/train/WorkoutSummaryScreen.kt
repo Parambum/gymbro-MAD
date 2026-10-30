@@ -26,6 +26,7 @@ import com.gymbro.mad.ui.components.MicroLabel
 import com.gymbro.mad.ui.components.SectionHeader
 import com.gymbro.mad.ui.components.StatTile
 import com.gymbro.mad.ui.theme.LocalPalette
+import com.gymbro.mad.ui.theme.LocalWeightUnit
 import java.time.Duration
 import kotlin.math.roundToInt
 
@@ -37,6 +38,7 @@ fun WorkoutSummaryScreen(
     onDone: () -> Unit = {},
 ) {
     val palette = LocalPalette.current
+    val weightUnit = LocalWeightUnit.current
     val session = workouts.sessions.value.firstOrNull { it.id == sessionId }
     if (session == null) {
         EmptyState("Summary unavailable", "This workout is no longer in your history.", modifier.fillMaxSize())
@@ -52,7 +54,7 @@ fun WorkoutSummaryScreen(
         Text("Session complete", style = MaterialTheme.typography.headlineSmall, color = palette.ink)
         Text(session.title, style = MaterialTheme.typography.titleMedium, color = palette.muted)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            StatTile("volume", session.volumeKg.roundToInt().toString(), Modifier.weight(1f), unit = "kg")
+            StatTile("volume", weightUnit.fromKilograms(session.volumeKg).roundToInt().toString(), Modifier.weight(1f), unit = weightUnit.suffix)
             StatTile("sets", session.completedSets.toString(), Modifier.weight(1f))
             StatTile("duration", durationLabel(session.duration), Modifier.weight(1f))
         }
@@ -62,7 +64,7 @@ fun WorkoutSummaryScreen(
         groups.forEach { (slug, exercises) ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(ExerciseCatalog.group(slug)?.displayName ?: slug, color = palette.ink)
-                Text("${exercises.sumOf { it.volumeKg }.roundToInt()} kg", color = palette.muted)
+                Text("${weightUnit.fromKilograms(exercises.sumOf { it.volumeKg }).roundToInt()} ${weightUnit.suffix}", color = palette.muted)
             }
         }
         SectionHeader("estimated 1RM")
@@ -76,7 +78,7 @@ fun WorkoutSummaryScreen(
             GymBroCard {
                 Text(exercise.name, color = palette.ink, style = MaterialTheme.typography.titleSmall)
                 val estimated = PersonalBest(exercise.exerciseId, exercise.name, set.weightKg, set.reps, session.date).estimated1RmKg
-                MicroLabel("${set.weightKg.pretty()} kg × ${set.reps} · estimated 1RM ${estimated.pretty()} kg", color = palette.muted)
+                MicroLabel("${weightUnit.format(set.weightKg)} ${weightUnit.suffix} × ${set.reps} · estimated 1RM ${weightUnit.format(estimated)} ${weightUnit.suffix}", color = palette.muted)
             }
         }
         SectionHeader("personal bests")
@@ -93,7 +95,7 @@ fun WorkoutSummaryScreen(
         }
         if (personalBests.isEmpty()) Text("No personal best weight was set this time.", color = palette.muted)
         personalBests.forEach { (exercise, set) ->
-            Text("${exercise.name}: ${set.weightKg.pretty()} kg × ${set.reps}", color = palette.ink)
+            Text("${exercise.name}: ${weightUnit.format(set.weightKg)} ${weightUnit.suffix} × ${set.reps}", color = palette.ink)
         }
         previous?.let {
             val change = if (it.volumeKg > 0) (((session.volumeKg - it.volumeKg) / it.volumeKg * 1000).roundToInt() / 10.0) else null

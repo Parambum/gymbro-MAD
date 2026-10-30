@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -113,6 +114,7 @@ fun GymBroBottomBar(
         Tab.entries.forEach { tab ->
             val selected = tab == current
             NavigationBarItem(
+                modifier = Modifier.testTag("bottom_tab_${tab.name.lowercase()}"),
                 selected = selected,
                 onClick = { onSelect(tab) },
                 icon = {
