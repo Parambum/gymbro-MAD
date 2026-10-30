@@ -25,7 +25,7 @@ jobs:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
           cache-key: android-${{ hashFiles('**/*.gradle*', '**/gradle/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties') }}
       - name: Assemble and test
-        run: ./gradlew --no-daemon assembleDebug testDebugUnitTest
+        run: bash ./gradlew --no-daemon assembleDebug testDebugUnitTest
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
