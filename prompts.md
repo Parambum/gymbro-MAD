@@ -369,5 +369,73 @@ The project is complete only when:
 
 #ADI
 
+## The Base (B-1 … B-8)
+Build a native Kotlin + Jetpack Compose app, not a WebView wrapper around the website. Build only the part everything else depends on and nobody can build in parallel — theme, component kit, navigation, data layer, 3D body map, Deck — so Prem, John and Arnav can each own a folder without colliding. Port the palettes and the exercise catalog from the website rather than reinventing them, so the phone and the site agree on muscle-group slugs and on what a colour means.
+
+## B-1: Gradle Build, JDK 17 Toolchain, Wrapper
+1. **Build Setup:**
+   - Gradle wrapper with a version catalog (`gradle/libs.versions.toml`); compileSdk/targetSdk 37, minSdk 26.
+   - Compile with a JDK 17 toolchain (foojay resolver) so it builds the same whatever JDK launched Gradle.
+   - Keep the heap small in `gradle.properties` (`-Xmx1536m`) so it builds on an 8 GB laptop with the emulator closed.
+2. **Onboarding:**
+   - `local.properties.example` for the SDK path; never commit `local.properties`.
+   - README "Run it" section: `installDebug`, `testDebugUnitTest`, `assembleDebug`.
+
+## B-2: Theme — Three Palettes, Type Scale, Shapes
+1. Port the website's three palettes (Molten, Court, Classic) as 13 colour tokens, animated when the theme switches.
+2. Expose them through `LocalPalette.current`; type scale and shapes in `ui/theme/`.
+3. House rule: colours come from the palette, never a hex literal, so everything retones with the theme.
+
+## B-3: Component Kit
+1. Build `GymBroCard`, `StatTile`, `GymBroChip`, `AccentButton`, `GhostButton`, `EmptyState`, `MeterBar`, `SectionHeader`, `MicroLabel` in `ui/components/`.
+2. Add `UnbuiltScreen`: every unfinished tab shows a brief (owner, tickets, what the screen should do, what is already wired) instead of a blank placeholder.
+
+## B-4: Navigation Shell
+1. Six bottom tabs (Deck, Train, Fuel, Body, Stats, History) plus inner routes (Cardio, Profile, Exercise Picker, Food Search, Session Detail) in one nav graph in `GymBroApp.kt`.
+2. Back stack should behave like a tab bar: re-selecting a tab restores its state, back from a tab root returns to Deck.
+3. Each tab carries its owner so the app knows who is building what.
+
+## B-5: Models, Repository Interfaces, In-Memory Store, Derived Analytics
+1. **Models:** every stored shape in `data/model/`, free of Compose and Android imports.
+2. **Repositories:** interfaces for workouts, cardio, fuel, food and analytics in `data/repo/Repositories.kt`; screens talk to these and nothing else.
+3. **Implementations:** in-memory for now, swappable for Room (ticket A-5) behind the same interfaces, so the seam never moves while four people build against it.
+4. **Analytics are derived, never stored:** muscle volume, weekly volume and personal bests are computed from logged sessions, so the charts, History and the body map cannot disagree.
+5. Zero seeded data anywhere, not even for the demo.
+
+## B-6: Exercise Catalog
+1. Generate `data/catalog/ExerciseCatalog.kt` from the website's `src/lib/data/exercise-catalog.ts`: 11 muscle groups, 191 movements.
+2. Key exercises by group-prefixed ids (e.g. `chest-flat-barbell-bench-press`) because some movements, like Close-Grip Bench Press, are filed under two groups.
+3. Unit test catalog integrity: ids unique and resolvable, every group has movements, search narrows them, and every muscle group has a zone on the 3D figure.
+
+## B-7: 3D Anatomy — Mesh Builders, Software Renderer, Body Screen
+1. **No 3D engine, no model files:** Filament would add megabytes of native libraries and a `.glb` pipeline for a figure made of ~30 primitives.
+2. `anatomy/Geometry.kt`: `Vec3`, `Mesh`, and builders for box, sphere, cylinder, capsule, icosphere.
+3. `anatomy/AnatomyRig.kt`: the body ported part for part from the website's `anatomy-config.ts`, with 11 tappable muscle groups and a camera angle per group.
+4. `anatomy/Renderer.kt`: project → cull → shade → depth-sort → fill about 1,800 triangles a frame, plus picking so a tap hits the front-most muscle (the torso blocks taps reaching muscles behind it).
+5. `feature/body/`: Body screen with drag to orbit, pinch to zoom, tap a muscle; tint muscles by trained volume.
+6. Unit test the maths that fails silently: mesh winding, camera projection and hit testing. Document it in `docs/3D-MODEL.md`.
+
+## B-8: Deck Wired to the Repositories
+1. Home screen reading real data from the repositories, with honest empty states.
+2. A "build status" card driven by `project/Roadmap.kt`, so the app always shows how far along the project is.
+3. Make Deck the worked example teammates copy: repository data, kit components, palette colours.
+
+## Team Process and Docs
+1. `project/Roadmap.kt`: every ticket in code with owner, hours, done flag and route; `RoadmapTest` keeps the split even (about 60% of hours for the three of them, shares within a few hours of each other).
+2. `TASKS.md` with acceptance criteria per ticket and a shared definition of done (real data, empty/error states, palette colours, 360dp width, nothing on the main thread, tests for arithmetic, no new warnings).
+3. `CONTRIBUTING.md`: branch naming and "own your folder" (one file per screen, one folder per area) to keep merge conflicts away.
+4. README house rules: no invented data; colours come from the palette.
+
+## Website API for the Android App (gymbro repo)
+1. Let `/api/fuel/foods/search` and `/api/fuel/barcode` answer without a NextAuth session, so the Android app's food search (J-2) and barcode scanner (J-3) work.
+2. Signed out, search covers the global catalog only and skips the history/favourites boosts; signed in, it behaves as before.
+3. `FUEL_ENABLED="false"` still turns both off; every other `/api/fuel` route stays behind `fuelGuard()`.
+
+## Integration: Merging Prem's History and Stats into Main
+1. Merge `prem/history-stats-platform` into `main` alongside John's completed Fuel track.
+2. Resolve the `RoadmapTest` conflict as the union of both sides (J-1 … J-6 and A-1 … A-3 done).
+3. Keep `main` as a single straight-line history, delete the merged branch, and update the README so Fuel is listed as built.
+4. Verify: the app compiles and all unit tests pass; Stats reads body weight from Fuel's weigh-in log.
+
 
 #PREM
