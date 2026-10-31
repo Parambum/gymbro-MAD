@@ -1,4 +1,247 @@
 [//]: # (USE THIS FOR PROMPTS )
+#PREM
+# Project: GymBro Android App — Complete Website-to-Android Replication
+
+## Reference Links
+
+**Original GitHub Repository:**  
+https://github.com/Parambum/gymbro-MAD.git
+
+**Live Reference Website:**  
+https://gymbro-dun.vercel.app/
+
+## Objective
+
+I want to recreate the GymBro platform as closely as possible in a native Android application using **Kotlin and Jetpack Compose**.
+
+Use the existing `gymbro-MAD` GitHub repository as the starting point. Thoroughly inspect the source code and the live website, understand the existing implementation, and modify the project to reproduce the reference platform's functionality and design.
+
+The goal is to achieve a complete, functional Android application, not just a visual mockup.
+
+## 1. Analyze the Existing Project
+
+Before making any changes:
+
+- Clone the existing GitHub repository.
+- Inspect the entire project structure, source code, dependencies, and configuration.
+- Identify the existing screens, navigation, data models, and implemented features.
+- Determine which features are complete, partially implemented, or missing.
+- Understand the current architecture and preserve working functionality wherever possible.
+
+Do not replace the entire project blindly. Build upon the existing implementation.
+
+## 2. Analyze the Reference Website A–Z
+
+Thoroughly inspect https://gymbro-dun.vercel.app/.
+
+Explore every accessible page, screen, section, navigation element, button, interaction, and relevant user flow.
+
+Pay particular attention to:
+
+- Workout history
+- Fitness statistics and analytics
+- Workout details and exercise information
+- Navigation and overall platform structure
+- Charts, graphs, and progress indicators
+- Workout records and historical data
+- Filters, date selectors, and interactive controls
+- Loading, empty, and error states
+- Visual styling, spacing, typography, icons, and colors
+
+Test the website's interactive elements wherever possible rather than relying exclusively on screenshots.
+
+Create an inventory of the website's features and compare it against the existing Android application.
+
+## 3. Recreate the History Feature
+
+The workout history functionality is a major priority.
+
+Replicate the reference website's history experience as closely as possible, including all applicable features:
+
+- Workout history listing
+- Workout dates and timestamps
+- Workout duration
+- Exercises performed during each session
+- Sets, repetitions, and weights
+- Individual workout details
+- Historical workout records
+- Date-based filtering and navigation
+- Workout summaries
+- Personal records, where applicable
+- Empty states and other relevant interactions
+
+Users should be able to open a previous workout and inspect its details.
+
+Preserve the actual historical workout data available in the application. Do not populate the interface with fabricated statistics merely to make it look complete.
+
+## 4. Recreate the Statistics Feature
+
+Reproduce the website's statistics and analytics experience.
+
+Inspect the reference to determine which metrics are available and implement the corresponding features, including applicable elements such as:
+
+- Total workouts
+- Workout frequency and consistency
+- Total training volume
+- Weight and repetition progression
+- Exercise-specific progress
+- Personal records
+- Progress charts and graphs
+- Date-range selection
+- Historical comparisons
+- Workout duration statistics
+- Weekly and monthly summaries
+
+Only include metrics that are supported by the reference platform or existing application data.
+
+Statistics must be calculated from actual workout records and update when new workouts are added or existing records change.
+
+Charts must display meaningful data, use appropriate labels, and handle missing data gracefully.
+
+## 5. Reproduce the Platform's UI and UX
+
+The Android application should closely match the reference website's visual design and user experience.
+
+Reproduce the following wherever applicable:
+
+- Overall layout and screen structure
+- Color palette and backgrounds
+- Typography and font hierarchy
+- Cards, containers, and borders
+- Icons and navigation elements
+- Charts and progress indicators
+- Spacing, margins, and alignment
+- Buttons, tabs, and interactive components
+- Scrolling behavior
+- Screen transitions
+- Loading, empty, and error states
+
+Use native Android components implemented with Jetpack Compose while maintaining visual consistency with the website.
+
+The result should feel like a polished, production-quality Android application rather than a basic website displayed inside a WebView.
+
+## 6. Technology Requirements
+
+Use the following technology stack:
+
+- **Language:** Kotlin
+- **UI framework:** Jetpack Compose
+- **Design system:** Material 3 where appropriate
+- **Architecture:** Follow the existing project architecture where practical; otherwise, use a maintainable architecture with clear separation of concerns.
+- **Navigation:** Implement proper navigation between screens.
+- **State management:** Use appropriate Compose state management and ViewModels.
+- **Data persistence:** Preserve and extend the existing persistence solution.
+- **Charts:** Use a suitable Android-compatible charting solution to reproduce the reference graphs.
+- **Asynchronous operations:** Use Kotlin coroutines and Flow where appropriate.
+
+Avoid unnecessary dependencies, duplicated business logic, and large, unmaintainable composable functions.
+
+## 7. Data and Functionality
+
+All screens must be functional.
+
+Ensure that:
+
+- History is derived from actual workout records.
+- Statistics are calculated from the underlying data.
+- Selecting a historical workout opens the correct details.
+- Filters and date selectors work correctly.
+- Navigation works consistently across screens.
+- Data remains available after restarting the application, using the existing persistence mechanism.
+- Existing functionality is not accidentally broken.
+- Empty datasets do not cause crashes.
+- UI state updates correctly when workout data changes.
+
+If the existing project uses Firebase or another backend, inspect its implementation before changing the data layer.
+
+Do not introduce a new backend or replace an existing database without a clear technical reason.
+
+## 8. Development Workflow
+
+Follow this sequence:
+
+1. Clone the GitHub repository.
+2. Inspect the project and identify the relevant modules and files.
+3. Explore the reference website and document its functionality.
+4. Compare the reference with the existing application.
+5. Create an implementation plan based on the identified gaps.
+6. Implement the missing and incomplete features.
+7. Reproduce the History and Statistics screens.
+8. Implement the remaining relevant platform functionality.
+9. Run Gradle builds and resolve compilation errors.
+10. Test navigation, data persistence, calculations, and UI behavior.
+11. Verify the application on an Android emulator or device.
+12. Review the completed implementation against the reference website.
+13. Commit the changes and push them to the original GitHub repository.
+
+Work incrementally and verify each major feature before moving to the next.
+
+## 9. Testing and Quality Assurance
+
+Before considering the project complete:
+
+- Verify that the project compiles successfully.
+- Resolve Kotlin, Gradle, and Jetpack Compose errors.
+- Test all major navigation flows.
+- Verify workout history and workout detail screens.
+- Check statistics calculations against the underlying records.
+- Test date filters and chart updates.
+- Test empty and populated datasets.
+- Verify persistence across application restarts.
+- Check layouts on different screen sizes.
+- Remove temporary placeholders and unnecessary debugging code.
+- Ensure no existing functionality has been unintentionally removed.
+
+Do not claim that a feature works unless it has been implemented and appropriately tested.
+
+## 10. GitHub Requirements
+
+Use the existing repository:
+
+https://github.com/Parambum/gymbro-MAD.git
+
+All changes must be made in this repository.
+
+- Preserve the existing Git history.
+- Work on an appropriate feature branch unless the repository's workflow requires otherwise.
+- Commit meaningful, logically grouped changes.
+- Do not commit credentials, API keys, secrets, or local machine configuration.
+- Push the completed changes to the original repository.
+- Do not force-push or overwrite unrelated work.
+
+If GitHub authentication or repository permissions prevent pushing, complete the implementation locally and explain exactly what is required to finish the push.
+
+## 11. Final Deliverables
+
+At completion, provide:
+
+1. The updated Android Studio project.
+2. A working Kotlin and Jetpack Compose implementation.
+3. The recreated History functionality.
+4. The recreated Statistics and analytics functionality.
+5. The other relevant replicated platform features.
+6. A successful build, with any remaining limitations clearly documented.
+7. A summary of the files changed and features implemented.
+8. Testing results and any outstanding issues.
+9. The GitHub branch and commit details.
+10. An installable APK if the build environment supports generating one.
+
+## Final Acceptance Criteria
+
+The project is complete only when:
+
+- The existing repository has been inspected and modified.
+- The reference website has been analyzed comprehensively.
+- History and Statistics reproduce the reference's functionality and visual design as closely as reasonably possible.
+- The implemented features work with real application data.
+- The Android application builds successfully.
+- The major user flows have been tested.
+- The changes have been pushed to the original GitHub repository, or any access-related blocker has been explicitly identified.
+
+**Important:** Prioritize accurate replication, functional completeness, maintainable Kotlin code, and a polished native Android experience. Do not stop after creating the UI. Inspect, implement, test, and verify the complete experience.
+
+
+
 #ARNAV
 
 ## Training Log and Session Completion
