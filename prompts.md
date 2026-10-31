@@ -436,6 +436,3 @@ Build a native Kotlin + Jetpack Compose app, not a WebView wrapper around the we
 2. Resolve the `RoadmapTest` conflict as the union of both sides (J-1 … J-6 and A-1 … A-3 done).
 3. Keep `main` as a single straight-line history, delete the merged branch, and update the README so Fuel is listed as built.
 4. Verify: the app compiles and all unit tests pass; Stats reads body weight from Fuel's weigh-in log.
-
-
-#PREM
