@@ -1,29 +1,26 @@
 [//]: # (USE THIS FOR PROMPTS )
 #ARNAV
 
-1. **Weekly Grouping:**
-    - Group workouts and cardio logs by week starting on Monday using `TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)`.
-    - Each week header must display:
-        - Date range (e.g., `Oct 12 – Oct 18`)
-        - Total session count for that week
-        - Total combined volume lifted (kg)
-2. **Feed List Items:**
-    - **Strength Sessions:** Show title, date, duration, total volume, total completed sets, and colored accent dots for all muscle groups trained in that session.
-    - **Cardio Activities:** Render in the same timeline, but distinctly styled (e.g., cardio icon, distance/time stats, unique layout) to clearly distinguish them from weightlifting sessions.
-3. **UI & Design System Rules:**
-    - Use `LocalPalette.current` for colors (no hex literals or custom hardcoded colors).
-    - Use shared components from the design system/kit.
-    - Support small screens (down to 360dp width) and scaled system fonts seamlessly.
-4. **Data & State Management:**
-    - Connect directly to `Repos.workouts` / `DerivedAnalyticsRepository` (or equivalent history repositories).
-    - Collect state asynchronously using `collectAsStateWithLifecycle()`.
-    - Implement honest **Empty**, **Loading**, and **Error** states.
-    - **Zero Mock Data:** Do not use sample rows, stub numbers, or hardcoded fallback lists.
+## Training Log and Session Completion
+- Build the exercise picker and set logger with search, muscle-group filters, editable weight/reps/RPE, completion state, and validation.
+- Ensure active workout state survives screen changes, completed sets are persisted, and finishing a session saves it and opens a useful summary.
+- Include duration, volume, completed-set and muscle-group totals, personal bests, previous-session comparison, and appropriately labeled Epley estimates.
+- Add a rest timer that starts when a set is completed, remains accurate from timestamps, and can notify when rest ends.
 
-### Constraints & Anti-Patterns:
-- Do not block the main thread; handle all repository queries asynchronously.
-- Do not modify files outside your designated scope (`feature/history/`, `feature/stats/`, `feature/profile/`, `data/repo/`, `.github/`).
-- Ensure no new compiler or linter warnings are generated.
+## Exercise Demonstrations
+- Find and use the website's paired exercise-demo images, map them to catalog exercises, and display the frames in the exercise logging flow so the selected movement is visible while logging.
+
+## Cardio and GPS Routes
+- Support manual cardio entries and history, then add opt-in GPS activity tracking with runtime location permission, background recording, saved route points, and a Leaflet route map.
+- Keep manual logging available when location permission or GPS is unavailable. GPX file import was not part of the implemented request.
+
+## Build and CI Reliability
+- Resolve Android Gradle/Kotlin source-set and GitHub Actions Android SDK setup failures, then make the workflow invoke the Gradle wrapper through Bash so CI does not depend on the wrapper's executable bit.
+- Correct unit-test expectations to match zero-volume normalization and the existing Epley formula after CI reported failures.
+
+## History and Dashboard
+- Organize workout and cardio activity into Monday-based weekly groups with date ranges, session counts, and volume totals; show useful workout metrics and visually distinct cardio entries.
+- Connect the timeline and dashboard to repository data, with honest empty/error states, responsive layouts, and the shared app styling.
 
 
 #ZESHAWN
